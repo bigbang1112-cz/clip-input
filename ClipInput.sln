@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClipInput", "ClipInput.csproj", "{0AFE2947-42A9-4099-91A7-37A4A49A0360}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0AFE2947-42A9-4099-91A7-37A4A49A0360}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AFE2947-42A9-4099-91A7-37A4A49A0360}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AFE2947-42A9-4099-91A7-37A4A49A0360}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AFE2947-42A9-4099-91A7-37A4A49A0360}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D6B2C609-8B06-413C-8A02-EA9B68A01828}
+	EndGlobalSection
+EndGlobal
