@@ -1,0 +1,82 @@
+﻿#
+# This is the default configuration file for Clip Input
+#
+
+# Last date time checked for an update
+LastCheckForUpdates:
+
+# Ratio for images and triangles to correctly resize for the render settings
+AspectRatio: [16, 9]
+
+# Scale of the whole visualizer
+Scale: [0.5, 0.5]
+
+# Breathing space for each element
+Space: [1.05, 1.05]
+
+# Position of the whole visualizer from center
+Position: [0, 0.5]
+
+# Determines if each input should appear only after being used
+ShowAfterInteraction: false 
+
+# Tells how far from each other should the base pads be
+PadOffset: [0.385, 0]
+
+# Color of the pad
+PadColor: [0.11, 0.44, 0.69, 1]
+
+# Background color of the pad
+PadBackgroundColor: [0.3, 0.3, 0.3, 0.3]
+
+# Starting symmetric point of the triangle
+PadStartPosition: [0.16, -0.45, 0]
+
+# Ending meeting point of the triangle
+PadEndPosition: [0.6, 0, 0]
+
+# Visual style of the input visualization
+Theme: Black 
+
+
+# Keyboard layout
+Keys:
+
+# Name of the game inputs
+- EntryName: Accelerate
+
+# Name of the MediaTracker track
+  TrackName: Key Up
+
+# Relative position of the key from the layout center
+  Position: [0, 0.25]
+
+# Image when the key is off, {0} is a wildcard for theme number
+  ImageOff: '{0}_Up.png'
+
+# Image when the key is on, {0} is a wildcard for theme number
+  ImageOn: '{0}_Up_On.png'
+
+- EntryName: Brake
+  TrackName: Key Down
+  Position: [0, -0.25]
+  ImageOff: '{0}_Down.png'
+  ImageOn: '{0}_Down_On.png'
+
+# Multiple names for game inputs
+- EntryNames: [SteerLeft, Steer left]
+
+  TrackName: Key Left
+  Position: [0.28, -0.25]
+  ImageOff: '{0}_Left.png'
+  ImageOn: '{0}_Left_On.png'
+
+# If this input should be hidden in analog
+  IsSteerInput: true
+
+- EntryNames: [SteerRight, Steer right]
+  TrackName: Key Right
+  Position: [-0.28, -0.25]
+  ImageOff: '{0}_Right.png'
+  ImageOn: '{0}_Right_On.png'
+  IsSteerInput: true

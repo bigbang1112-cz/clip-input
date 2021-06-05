@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Product>Clip Input</Product>
+		<AssemblyTitle>Clip Input</AssemblyTitle>
+		<Authors>Petr 'BigBang1112' Pivoňka</Authors>
+		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
+		<Version>0.1.0</Version>
+
+		<TargetFramework>net5.0</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="GBX.NET" Version="0.10.1" />
+	  <PackageReference Include="GBX.NET.LZO" Version="1.0.0" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,38 @@
+﻿AspectRatio: [16, 9]
+Scale: [0.5, 0.5]
+Space: [1.05, 1.05]
+Position: [0, 0.5]
+ShowAfterInteraction: false
+PadOffset: [0.385, 0]
+PadColor: [0.11, 0.44, 0.69, 1]
+PadBackgroundColor: [0.3, 0.3, 0.3, 0.3]
+PadStartPosition: [0.16, -0.45, 0]
+PadEndPosition: [0.6, 0, 0]
+Theme: Black
+
+Keys:
+- EntryName: Accelerate
+  TrackName: Key Up
+  Position: [0, 0.25]
+  ImageOff: '{0}_Up.png'
+  ImageOn: '{0}_Up_On.png'
+
+- EntryName: Brake
+  TrackName: Key Down
+  Position: [0, -0.25]
+  ImageOff: '{0}_Down.png'
+  ImageOn: '{0}_Down_On.png'
+
+- EntryNames: [SteerLeft, Steer left]
+  TrackName: Key Left
+  Position: [0.28, -0.25]
+  ImageOff: '{0}_Left.png'
+  ImageOn: '{0}_Left_On.png'
+  IsSteerInput: true
+
+- EntryNames: [SteerRight, Steer right]
+  TrackName: Key Right
+  Position: [-0.28, -0.25]
+  ImageOff: '{0}_Right.png'
+  ImageOn: '{0}_Right_On.png'
+  IsSteerInput: true
