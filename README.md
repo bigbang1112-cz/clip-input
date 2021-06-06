@@ -3,6 +3,8 @@
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/BigBang1112-cz/clip-input?include_prereleases&style=for-the-badge)](https://github.com/BigBang1112-cz/clip-input/releases)
 [![GitHub all releases](https://img.shields.io/github/downloads/BigBang1112-cz/clip-input/total?style=for-the-badge)](https://github.com/BigBang1112-cz/clip-input/releases)
 
+Powered by [GBX.NET](https://github.com/BigBang1112/gbx-net).
+
 **Clip Input** is a tool that can extract inputs from replays **and create a MediaTracker visualization as .Clip.Gbx** which can be then imported next to the replay.
 
 The tool currently works on drag and dropping. You can also drag and drop multiple files to process.
