@@ -93,14 +93,23 @@ namespace ClipInput
         {
             if (InputGBX.TryNode(out CGameCtnReplayRecord replay))
             {
+                Console.WriteLine("CGameCtnReplayRecord (Replay.Gbx) detected...");
+
                 if (replay.ControlEntries is null)
                 {
+                    Console.WriteLine("Control entries not found in the root node...");
+
                     if (replay.Ghosts is not null && replay.Ghosts.Length > 0)
                     {
+                        Console.WriteLine("Ghost found...");
+
                         return ProcessGhost(replay.Ghosts.FirstOrDefault());
                     }
 
+                    Console.WriteLine("Checking ghosts in Clip...");
+
                     var ghosts = ExtractGhosts(replay.Clip);
+
                     return ProcessGhost(ghosts.FirstOrDefault());
                 }
 
@@ -111,11 +120,15 @@ namespace ClipInput
 
             if (InputGBX.TryNode(out CGameCtnGhost ghost))
             {
+                Console.WriteLine("CGameCtnGhost (Ghost.Gbx) detected...");
+
                 return ProcessGhost(ghost);
             }
 
             if (InputGBX.TryNode(out CGameCtnMediaClip clip))
             {
+                Console.WriteLine("CGameCtnMediaClip (Clip.Gbx) detected...");
+
                 var ghosts = ExtractGhosts(clip);
 
                 return ProcessGhost(ghosts.FirstOrDefault());
@@ -129,19 +142,29 @@ namespace ClipInput
             if (ghost == null)
                 throw new ArgumentNullException(nameof(ghost));
 
-            if (ghost.TryGetChunk(out CGameCtnGhost.Chunk03092025 chunk025))
+            Console.WriteLine("Processing CGameCtnGhost...");
+
+            if (ghost.TryGetChunk(out CGameCtnGhost.Chunk03092025 _))
             {
+                Console.WriteLine("Chunk 0x025 found.");
+
                 if (ghost.Validate_ExeVersion?.StartsWith("TrackmaniaTurbo") == true)
                 {
+                    Console.WriteLine("TrackmaniaTurbo in Validate_ExeVersion found.");
+
                     throw new TMTurboNotSupportedException();
                 }
                 else
                 {
+                    Console.WriteLine("The replay comes from ManiaPlanet.");
+
                     GameVersion = Game.ManiaPlanet;
                 }
             }
             else
             {
+                Console.WriteLine("The replay comes from TMUF or older game.");
+
                 GameVersion = Game.TMUF;
             }
 
@@ -150,8 +173,12 @@ namespace ClipInput
 
         private GameBox<CGameCtnMediaClip> ProcessControlEntries(IEnumerable<ControlEntry> entries, TimeSpan eventsDuration)
         {
-            if (entries == null) throw new ArgumentNullException(nameof(entries),
-                "No inputs are available in this GBX.");
+            if (entries == null)
+                throw new NoInputsException();
+
+            Console.WriteLine("Processing the inputs...");
+
+            Console.WriteLine("Creating CGameCtnMediaClip...");
 
             var clip = new CGameCtnMediaClip()
             {
@@ -161,11 +188,13 @@ namespace ClipInput
             switch (GameVersion)
             {
                 case Game.TMUF:
+                    Console.WriteLine("Creating CGameCtnMediaClip chunks 0x004, 0x005, 0x007...");
                     clip.CreateChunk<CGameCtnMediaClip.Chunk03079004>();
                     clip.CreateChunk<CGameCtnMediaClip.Chunk03079005>();
                     clip.CreateChunk<CGameCtnMediaClip.Chunk03079007>();
                     break;
                 case Game.ManiaPlanet:
+                    Console.WriteLine("Creating CGameCtnMediaClip chunk 0x00D...");
                     clip.CreateChunk<CGameCtnMediaClip.Chunk0307900D>();
                     break;
             }
@@ -206,18 +235,23 @@ namespace ClipInput
                 }
             }
 
+
             if (hasDigitalInput)
             {
+                Console.WriteLine("Processing diginal input...");
                 ProcessDigitalInput(entries, eventsDuration, tracks, onlyAcceleration: hasAnalogSteering);
             }
 
             if (hasAnalogSteering)
             {
+                Console.WriteLine("Processing analog steering input...");
                 ProcessAnalogSteering(entries, eventsDuration, tracks);
             }
 
             if (hasAccelReal || hasBrakeReal)
             {
+                Console.WriteLine("Processing analog acceleration/brake...");
+
                 ProcessAnalogAccel(entries, eventsDuration, tracks,
                     hasAccelReal ? Keys.FirstOrDefault(x => x.EntryName == "Accelerate") : null,
                     hasBrakeReal ? Keys.FirstOrDefault(x => x.EntryName == "Brake") : null);
@@ -227,6 +261,8 @@ namespace ClipInput
 
             if (StartOffset != TimeSpan.Zero)
             {
+                Console.WriteLine($"Offsetting the blocks by {StartOffset.TotalSeconds} seconds.");
+
                 foreach (var track in tracks)
                 {
                     foreach (var block in track.Blocks)
@@ -246,6 +282,8 @@ namespace ClipInput
                     }
                 }
             }
+
+            Console.WriteLine("Building the final GBX file...");
 
             return new GameBox<CGameCtnMediaClip>(clip);
         }
@@ -484,6 +522,8 @@ namespace ClipInput
 
         private CGameCtnMediaBlockTriangles CreateKeyPadBackground(KeyboardKey key, TimeSpan eventStartTime, TimeSpan eventsDuration)
         {
+            Console.WriteLine("Creating key pad background...");
+
             var trianglePad = new CGameCtnMediaBlockTriangles2D()
             {
                 Vertices = new Vec4[] { PadBackgroundColor, PadBackgroundColor, PadBackgroundColor, PadBackgroundColor },
@@ -604,6 +644,8 @@ namespace ClipInput
 
         private CGameCtnMediaBlockTriangles CreatePadBackground(Side side, TimeSpan eventStartTime, TimeSpan eventsDuration)
         {
+            Console.WriteLine("Creating pad background...");
+
             var sideMultiplier = 1;
             if (side == Side.Right)
                 sideMultiplier = -1;
@@ -712,6 +754,8 @@ namespace ClipInput
 
         private CGameCtnMediaTrack CreateMediaTrack(string name)
         {
+            Console.WriteLine($"Creating media track {name}...");
+
             var track = new CGameCtnMediaTrack
             {
                 Name = name,

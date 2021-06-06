@@ -756,6 +756,17 @@ namespace ClipInputCLI
                 {
                     Console.WriteLine("Trackmania Turbo replays are not supported.\nYou can still however look for the inputs with GBX.NET.\nhttps://github.com/BigBang1112/gbx-net");
                 }
+                catch (NoInputsException e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine(e.Message);
+                    Console.ResetColor();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.StackTrace);
+                }
 
                 Console.WriteLine();
                 PressAnyKeyToContinue();
@@ -788,7 +799,7 @@ namespace ClipInputCLI
         public static void PressAnyKeyToContinue()
         {
             Console.Write("Press any key to continue... ");
-            Console.ReadKey();
+            Console.ReadKey(true);
             Console.Write("\r" + new string(' ', Console.WindowWidth) + "\r");
         }
 
