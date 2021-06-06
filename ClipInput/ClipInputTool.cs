@@ -788,7 +788,7 @@ namespace ClipInput
             switch (GameVersion)
             {
                 case Game.TMUF:
-                    blockImage.Image = new FileRef(2, null, Path.Combine(@"MediaTracker\Images\Inputs", Path.GetFileName(imageUrl)),
+                    blockImage.Image = new FileRef(2, null, Path.Combine(@"MediaTracker\Images", Path.GetFileName(imageUrl)),
                     new Uri("https://bigbang1112.eu/projects/clipinput/" + imageUrl));
                     break;
                 case Game.ManiaPlanet:
