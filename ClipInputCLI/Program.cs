@@ -379,6 +379,8 @@ namespace ClipInputCLI
                                 {
                                     var directoryToCopy = Path.Combine(dir, folderMediaDictionary[game]);
 
+                                    Directory.CreateDirectory(directoryToCopy);
+
                                     foreach (var file in Directory.GetFiles(inputsFolder))
                                     {
                                         var fName = Path.GetFileName(file);
