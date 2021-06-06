@@ -22,6 +22,7 @@ namespace ClipInputCLI
         public float[] PadStartPosition { get; set; }
         public float[] PadEndPosition { get; set; }
         public Theme? Theme { get; set; }
+        public float? StartOffset { get; set; }
         public KeyboardKey[] Keys { get; set; }
     }
 }

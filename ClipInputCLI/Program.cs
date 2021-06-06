@@ -429,6 +429,7 @@ namespace ClipInputCLI
                 var padStartPosition = default(Vec3?);
                 var padEndPosition = default(Vec3?);
                 var theme = default(Theme?);
+                var startOffset = default(TimeSpan?);
 
                 var enumerator = ((IEnumerable<string>)args).GetEnumerator();
 
@@ -639,6 +640,18 @@ namespace ClipInputCLI
 
                                 break;
                             }
+                        case "-start":
+                        case "-startOffset":
+                            {
+                                enumerator.MoveNext();
+                                var str = enumerator.Current;
+
+                                var offset = float.Parse(str, CultureInfo.InvariantCulture);
+
+                                startOffset = TimeSpan.FromSeconds(offset);
+
+                                break;
+                            }
                     }
                 }
 
@@ -669,6 +682,7 @@ namespace ClipInputCLI
                     if (config.PadStartPosition is not null) tool.PadStartPosition = (Vec3)config.PadStartPosition;
                     if (config.PadEndPosition is not null) tool.PadEndPosition = (Vec3)config.PadEndPosition;
                     if (config.Theme.HasValue) tool.Theme = config.Theme.Value;
+                    if (config.StartOffset.HasValue) tool.StartOffset = TimeSpan.FromSeconds(config.StartOffset.Value);
                     if (config.Keys is not null)
                     {
                         foreach (var key in config.Keys)
@@ -698,6 +712,7 @@ namespace ClipInputCLI
                 if (padStartPosition.HasValue) tool.PadStartPosition = padStartPosition.Value;
                 if (padEndPosition.HasValue) tool.PadEndPosition = padEndPosition.Value;
                 if (theme.HasValue) tool.Theme = theme.Value;
+                if (startOffset.HasValue) tool.StartOffset = startOffset.Value;
 
                 Console.WriteLine();
                 Console.WriteLine($"Beginning the process...");

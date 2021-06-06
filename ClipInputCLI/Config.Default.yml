@@ -41,6 +41,9 @@ PadEndPosition: [0.6, 0, 0]
 # Visual style of the input visualization
 Theme: Black 
 
+# Delay in second before the whole visualizer starts
+StartOffset: 0 
+
 
 # Keyboard layout
 Keys:

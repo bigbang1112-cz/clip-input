@@ -27,6 +27,7 @@ namespace ClipInput
         public Vec3 PadStartPosition { get; set; }
         public Vec3 PadEndPosition { get; set; }
         public Theme Theme { get; set; }
+        public TimeSpan StartOffset { get; set; }
         public KeyboardKey[] Keys { get; set; }
 
         public ClipInputTool(GameBox gbx) : base(gbx)
@@ -102,6 +103,8 @@ namespace ClipInput
                     var ghosts = ExtractGhosts(replay.Clip);
                     return ProcessGhost(ghosts.FirstOrDefault());
                 }
+
+                GameVersion = Game.TMUF;
 
                 return ProcessControlEntries(replay.ControlEntries, TimeSpan.FromMilliseconds(replay.EventsDuration));
             }
@@ -221,6 +224,28 @@ namespace ClipInput
             }
 
             clip.Tracks = tracks;
+
+            if (StartOffset != TimeSpan.Zero)
+            {
+                foreach (var track in tracks)
+                {
+                    foreach (var block in track.Blocks)
+                    {
+                        switch (block)
+                        {
+                            case CGameCtnMediaBlockImage blockImage:
+                                blockImage.Effect.Keys.ForEach(x => x.Time += (float)StartOffset.TotalSeconds);
+                                break;
+                            case CGameCtnMediaBlockTriangles blockTriangles:
+                                blockTriangles.Keys.ForEach(x => x.Time += (float)StartOffset.TotalSeconds);
+                                break;
+                            case CGameCtnMediaBlockText blockText:
+                                blockText.Effect.Keys.ForEach(x => x.Time += (float)StartOffset.TotalSeconds);
+                                break;
+                        }
+                    }
+                }
+            }
 
             return new GameBox<CGameCtnMediaClip>(clip);
         }
