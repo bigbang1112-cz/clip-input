@@ -770,8 +770,11 @@ namespace ClipInputCLI
                     Console.WriteLine(e.StackTrace);
                 }
 
-                Console.WriteLine();
-                PressAnyKeyToContinue();
+                if (allArgsAreFiles)
+                {
+                    Console.WriteLine();
+                    PressAnyKeyToContinue();
+                }
             }
         }
 
