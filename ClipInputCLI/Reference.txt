@@ -24,7 +24,7 @@
     [r],[g],[b],[a] (default: 0.11,0.44,0.69,1)
       color of the pad
   -padBrakeColor
-    [r],[g],[b],[a] (default: 0.11,0.44,0.69,1)
+    [r],[g],[b],[a] (default: 0.69,0.18,0.11,1)
       color of the analog brake
   -padBackgroundColor
     [r],[g],[b],[a] (default: 0.3,0.3,0.3,0.3)
