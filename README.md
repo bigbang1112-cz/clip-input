@@ -11,7 +11,9 @@ A web interface is planned in the future.
 
 Possible uses of Clip Input:
 - Inspect other player's solutions
-- Inspect very old
+- Inspect very old replays reaching 2003
+- Input visualization for map GPS
+- Save time rendering the input visualization
 
 Advantages of Clip Input over other input inspection methods:
 - No rendering is required to showcase the inputs
