@@ -40,6 +40,13 @@ This version doesn't have inputs available in replays like other Trackmania game
 
 This version has inputs available. Somehow keyboard inputs are stored as analog values, but that's not the main problem. MediaTracker in Trackmania Turbo doesn't support any kind of 2D rendering, including images and triangles, which means there isn't a way to show the inputs.
 
+## Troubleshooting
+
+- **Issue: The program blinks when trying to run**
+  - Solution: Install [.NET 5 Runtime](https://dotnet.microsoft.com/download/dotnet/5.0/runtime) and choose x64 or x86 depending on the OS you use.
+- Issue: The analog input is white instead of blue
+  - Solution: Analog input is made out of triangles which become grayscaled on lower settings. Set your graphical settings on at least High.
+
 ## Settings
 
 You can manage the default values in `Config.yml` file.
