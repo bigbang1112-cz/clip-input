@@ -2,9 +2,6 @@
 # This is the default configuration file for Clip Input
 #
 
-# Last date time checked for an update
-LastCheckForUpdates:
-
 # Ratio for images and triangles to correctly resize for the render settings
 AspectRatio: [16, 9]
 
