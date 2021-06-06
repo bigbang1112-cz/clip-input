@@ -34,7 +34,7 @@ Where can I import the outputted Clip.Gbx?
 
 ## Trackmania 2020
 
-This version doesn't have inputs available in replays like other Trackmania games. They might be even ecrypted, making this likely an impossible thing to solve.
+This version doesn't have inputs available in replays like other Trackmania games. They might be even encrypted, making this likely an impossible thing to solve.
 
 ## Trackmania Turbo
 
