@@ -201,7 +201,6 @@ namespace ClipInput
 
             var tracks = new List<CGameCtnMediaTrack>();
 
-            var hasDigitalInput = false;
             var hasAccelReal = false;
             var hasBrakeReal = false;
             var hasAnalogSteering = false;
@@ -216,7 +215,6 @@ namespace ClipInput
                     case "SteerRight":
                     case "Steer left":
                     case "Steer right":
-                        hasDigitalInput = true;
                         break;
                     case "Gas":
                         hasAccelReal = true;
@@ -235,12 +233,8 @@ namespace ClipInput
                 }
             }
 
-
-            if (hasDigitalInput)
-            {
-                Console.WriteLine("Processing diginal input...");
-                ProcessDigitalInput(entries, eventsDuration, tracks, onlyAcceleration: hasAnalogSteering);
-            }
+            Console.WriteLine("Processing acceleration input...");
+            ProcessDigitalInput(entries, eventsDuration, tracks, onlyAcceleration: hasAnalogSteering);
 
             if (hasAnalogSteering)
             {
@@ -404,22 +398,21 @@ namespace ClipInput
                 tracks.Add(brakePad);
             }
 
+            var lastEntry = entries.Last();
+
             foreach (var entry in entries)
             {
+                if (entry.Equals(lastEntry))
+                {
+                    CompleteTheTriangle(accelPadQuad, eventsDuration);
+                    CompleteTheTriangle(brakePadQuad, eventsDuration);
+                }
+
                 if (entry.Name == "Gas" || entry.Name == "AccelerateReal")
                 {
                     var analog = (ControlEntryAnalog)entry;
 
-                    if (accelPadQuad is not null)
-                    {
-                        var key = new CGameCtnMediaBlockTriangles.Key(accelPadQuad)
-                        {
-                            Time = (float)entry.Time.TotalSeconds,
-                            Positions = accelPadQuad.Keys[0].Positions
-                        };
-
-                        accelPadQuad.Keys.Add(key);
-                    }
+                    CompleteTheTriangle(accelPadQuad, entry.Time);
 
                     if (analog.Value > 0)
                     {
@@ -436,16 +429,7 @@ namespace ClipInput
                 {
                     var analog = (ControlEntryAnalog)entry;
 
-                    if (brakePadQuad is not null)
-                    {
-                        var key = new CGameCtnMediaBlockTriangles.Key(brakePadQuad)
-                        {
-                            Time = (float)entry.Time.TotalSeconds,
-                            Positions = brakePadQuad.Keys[0].Positions
-                        };
-
-                        brakePadQuad.Keys.Add(key);
-                    }
+                    CompleteTheTriangle(brakePadQuad, entry.Time);
 
                     if ((analog.Value > 0 && entry.Name != "Gas") || (entry.Name == "Gas" && analog.Value < 0))
                     {
@@ -457,6 +441,20 @@ namespace ClipInput
                         brakePadQuad = null;
                     }
                 }
+            }
+        }
+
+        private static void CompleteTheTriangle(CGameCtnMediaBlockTriangles triangles, TimeSpan time)
+        {
+            if (triangles is not null)
+            {
+                var key = new CGameCtnMediaBlockTriangles.Key(triangles)
+                {
+                    Time = (float)time.TotalSeconds,
+                    Positions = triangles.Keys[0].Positions
+                };
+
+                triangles.Keys.Add(key);
             }
         }
 
@@ -478,12 +476,18 @@ namespace ClipInput
             var padQuad = default(CGameCtnMediaBlockTriangles);
 
             var inverse = -1;
+            var lastEntry = entries.Last();
 
             foreach (var entry in entries)
             {
                 if (entry.Name == "_FakeDontInverseAxis" && entry.IsEnabled)
                 {
                     inverse = 1;
+                }
+
+                if (entry.Equals(lastEntry))
+                {
+                    CompleteTheTriangle(padQuad, eventsDuration);
                 }
 
                 switch (entry.Name)
@@ -493,16 +497,7 @@ namespace ClipInput
                         {
                             var analog = (ControlEntryAnalog)entry;
 
-                            if (padQuad is not null)
-                            {
-                                var key = new CGameCtnMediaBlockTriangles.Key(padQuad)
-                                {
-                                    Time = (float)entry.Time.TotalSeconds,
-                                    Positions = padQuad.Keys[0].Positions
-                                };
-
-                                padQuad.Keys.Add(key);
-                            }
+                            CompleteTheTriangle(padQuad, entry.Time);
 
                             if (analog.Value > 0 || analog.Value < 0)
                             {
@@ -788,7 +783,7 @@ namespace ClipInput
             switch (GameVersion)
             {
                 case Game.TMUF:
-                    blockImage.Image = new FileRef(2, null, Path.Combine(@"MediaTracker\Images\Inputs", Path.GetFileName(imageUrl)),
+                    blockImage.Image = new FileRef(2, null, Path.Combine(@"MediaTracker\Images", Path.GetFileName(imageUrl)),
                     new Uri("https://bigbang1112.eu/projects/clipinput/" + imageUrl));
                     break;
                 case Game.ManiaPlanet:

@@ -18,7 +18,7 @@ Possible uses of Clip Input:
 - Save time rendering the input visualization
 
 Advantages of Clip Input over other input inspection methods:
-- No rendering is required to showcase the inputs
+- No video rendering is required to showcase the inputs
 - Compatibility of replays across the whole Trackmania franchise
 - Currently it's the fastest method to check inputs in Trackmania 2
 - Inputs can be rendered together with the clip
@@ -46,7 +46,7 @@ You can manage the default values in `Config.yml` file.
 
 ### Command line arguments
 
-The first argument always must be the file to process. You can also put multiple files, but at the moment, you can't use command line arguments when processing multiple files at once.
+The first argument always must be the file to process. You can also put multiple files, but at the moment, you can't use optional arguments when processing multiple files at once.
 
 ```
 ClipInputCLI [file_name] [optional_args]
@@ -68,4 +68,4 @@ Optional arguments:
 | -padStartPos, -padStartPosition | 0.16,-0.45,0 | \[x\],\[y\],\[z\] | Starting symmetric point of the triangle
 | -padEndPos -padEndPosition | 0.6,0,0 | \[x\],\[y\],\[z\] | Ending meeting point of the triangle
 | -theme | black | \[black/white\] | Visual style of the input visualization
-| -start, -startOffset | 0 | \[seconds\] | Delay in second before the whole visualizer starts
+| -start, -startOffset | 0 | \[seconds\] | Delay in seconds before the whole visualizer starts
