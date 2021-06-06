@@ -17,6 +17,7 @@ namespace ClipInputCLI
         public bool? ShowAfterInteraction { get; set; }
         public float[] PadOffset { get; set; }
         public float[] PadColor { get; set; }
+        public float[] PadBrakeColor { get; set; }
         public float[] PadBackgroundColor { get; set; }
         public float[] PadStartPosition { get; set; }
         public float[] PadEndPosition { get; set; }

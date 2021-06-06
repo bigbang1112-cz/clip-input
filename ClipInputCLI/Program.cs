@@ -102,7 +102,7 @@ namespace ClipInputCLI
                     var date = default(DateTime?);
 
                     if (fileNotFound || !lastCheckForUpdates.TryGetValue("LastCheckForUpdates", out date)
-                        || !date.HasValue || date - DateTime.Now > TimeSpan.FromHours(1))
+                        || !date.HasValue || DateTime.Now - date > TimeSpan.FromHours(1))
                     {
                         lastCheckForUpdates["LastCheckForUpdates"] = DateTime.Now;
 
@@ -424,6 +424,7 @@ namespace ClipInputCLI
                 var showAfterInteraction = default(bool?);
                 var padOffset = default(Vec2?);
                 var padColor = default(Vec4?);
+                var padBrakeColor = default(Vec4?);
                 var padBackgroundColor = default(Vec4?);
                 var padStartPosition = default(Vec3?);
                 var padEndPosition = default(Vec3?);
@@ -554,6 +555,24 @@ namespace ClipInputCLI
 
                                 break;
                             }
+                        case "-padBrakeColor":
+                            {
+                                enumerator.MoveNext();
+                                var str = enumerator.Current;
+
+                                var split = str.Split(',');
+                                if (split.Length != 4)
+                                    throw new FormatException($"Pad brake color parameter is inproperly set. Format: [r],[g],[b],[a]");
+
+                                var r = float.Parse(split[0], CultureInfo.InvariantCulture);
+                                var g = float.Parse(split[1], CultureInfo.InvariantCulture);
+                                var b = float.Parse(split[2], CultureInfo.InvariantCulture);
+                                var a = float.Parse(split[3], CultureInfo.InvariantCulture);
+
+                                padBrakeColor = (r, g, b, a);
+
+                                break;
+                            }
                         case "-padBackgroundColor":
                             {
                                 enumerator.MoveNext();
@@ -645,6 +664,7 @@ namespace ClipInputCLI
                     if (config.ShowAfterInteraction.HasValue) tool.ShowAfterInteraction = config.ShowAfterInteraction.Value;
                     if (config.PadOffset is not null) tool.PadOffset = (Vec2)config.PadOffset;
                     if (config.PadColor is not null) tool.PadColor = (Vec4)config.PadColor;
+                    if (config.PadBrakeColor is not null) tool.PadBrakeColor = (Vec4)config.PadBrakeColor;
                     if (config.PadBackgroundColor is not null) tool.PadBackgroundColor = (Vec4)config.PadBackgroundColor;
                     if (config.PadStartPosition is not null) tool.PadStartPosition = (Vec3)config.PadStartPosition;
                     if (config.PadEndPosition is not null) tool.PadEndPosition = (Vec3)config.PadEndPosition;
@@ -673,6 +693,7 @@ namespace ClipInputCLI
                 if (showAfterInteraction.HasValue) tool.ShowAfterInteraction = showAfterInteraction.Value;
                 if (padOffset.HasValue) tool.PadOffset = padOffset.Value;
                 if (padColor.HasValue) tool.PadColor = padColor.Value;
+                if (padBrakeColor.HasValue) tool.PadBrakeColor = padBrakeColor.Value;
                 if (padBackgroundColor.HasValue) tool.PadBackgroundColor = padBackgroundColor.Value;
                 if (padStartPosition.HasValue) tool.PadStartPosition = padStartPosition.Value;
                 if (padEndPosition.HasValue) tool.PadEndPosition = padEndPosition.Value;
@@ -711,12 +732,18 @@ namespace ClipInputCLI
 
                     output.Save(outputFileName);
 
+                    Console.WriteLine();
+                    Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("Done!");
+                    Console.ResetColor();
                 }
                 catch (TMTurboNotSupportedException)
                 {
                     Console.WriteLine("Trackmania Turbo replays are not supported.\nYou can still however look for the inputs with GBX.NET.\nhttps://github.com/BigBang1112/gbx-net");
                 }
+
+                Console.WriteLine();
+                PressAnyKeyToContinue();
             }
         }
 

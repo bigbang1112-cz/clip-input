@@ -26,6 +26,9 @@ PadOffset: [0.385, 0]
 # Color of the pad
 PadColor: [0.11, 0.44, 0.69, 1]
 
+# Color of the analog brake
+PadBrakeColor: [0.69, 0.18, 0.11, 1]
+
 # Background color of the pad
 PadBackgroundColor: [0.3, 0.3, 0.3, 0.3]
 
