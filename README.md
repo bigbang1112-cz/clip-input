@@ -26,7 +26,7 @@ Currently the tool can read inputs from these files:
 - Ghost.Gbx
 - Clip.Gbx (that contains minimally 1 ghost)
 
-Where can I import the Clip.Gbx?
+Where can I import the outputted Clip.Gbx?
 - For replays as old as TM1.0-TMUF, it is recommended to import the clip in the latest version of Trackmania United Forever.
 - For replays from TM2, it is recommended to import the clip in the latest version of ManiaPlanet.
 
