@@ -45,7 +45,7 @@ This version has inputs available. Somehow keyboard inputs are stored as analog 
 - **Issue: The program blinks when trying to run**
   - Solution: Install [.NET 5 Runtime](https://dotnet.microsoft.com/download/dotnet/5.0/runtime) and choose x64 or x86 depending on the OS you use.
 - Issue: The analog input is white instead of blue
-  - Solution: Analog input is made out of triangles which become grayscaled on lower settings. Set your graphical settings on at least High.
+  - Solution: Analog input is made out of 2D triangles which become always white on PC2 shader quality. To fix this, **set the Shader Quality to at least PC3 Low**.
 
 ## Settings
 
