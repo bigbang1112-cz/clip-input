@@ -657,7 +657,12 @@ namespace ClipInputCLI
                     }
                 }
 
-                if (!File.Exists(fileName)) return;
+                if (!File.Exists(fileName))
+                {
+                    Console.WriteLine($"File '{fileName}' doesn't exist.");
+                    PressAnyKeyToContinue();
+                    return;
+                }
 
                 Console.WriteLine();
                 Console.WriteLine($"Loading {Path.GetFileName(fileName)}...");
