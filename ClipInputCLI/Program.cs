@@ -17,6 +17,25 @@ namespace ClipInputCLI
     {
         static async Task Main(string[] args)
         {
+            try
+            {
+                await DoMain(args);
+            }
+            catch (FormatException e)
+            {
+                Console.WriteLine(e.Message);
+                PressAnyKeyToContinue();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+                PressAnyKeyToContinue();
+            }
+        }
+
+        static async Task DoMain(string[] args)
+        {
             SetTitle();
 
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
