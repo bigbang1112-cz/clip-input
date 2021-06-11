@@ -76,3 +76,5 @@ Optional arguments:
 | -padEndPos -padEndPosition | 0.6,0,0 | \[x\],\[y\],\[z\] | Ending meeting point of the triangle
 | -theme | black | \[black/white\] | Visual style of the input visualization
 | -start, -startOffset | 0 | \[seconds\] | Delay in seconds before the whole visualizer starts
+| -adjustToFps | false | \[true/false\] | If the activation state should be at least a frame long
+| -fps | 30 | \[num\] | Expected FPS for calculating minimal activation time

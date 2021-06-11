@@ -41,10 +41,10 @@ Theme: Black
 # Delay in second before the whole visualizer starts
 StartOffset: 0 
 
-# If the activation states should be at least a frame long
+# If the activation state should be at least a frame long
 AdjustToFPS: false
 
-# The expected FPS for calculating minimal activation time, has effect only if AdjustToFPS is true
+# Expected FPS for calculating minimal activation time, has effect only if AdjustToFPS is true
 FPS: 30
 
 

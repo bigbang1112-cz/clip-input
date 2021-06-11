@@ -44,5 +44,11 @@
   -startOffset
     [seconds] (default: 0)
       delay in second before the whole visualizer starts
+  -adjustToFps
+    [true/false] (default: false)
+      if the activation state should be at least a frame long
+  -fps
+    [num] (default: 30)
+      expected FPS for calculating minimal activation time
 
 Usage: ClipInput [file_path] -scale 0.3 -pos 0.5,0.5
