@@ -458,11 +458,11 @@ namespace ClipInputCLI
 
                 while (enumerator.MoveNext())
                 {
-                    var command = enumerator.Current;
+                    var command = enumerator.Current.ToLower();
 
                     switch (command)
                     {
-                        case "-aspectRatio":
+                        case "-aspectratio":
                         case "-ratio":
                             {
                                 aspectRatio = ArgumentVec2(enumerator,
@@ -489,44 +489,44 @@ namespace ClipInputCLI
                                     $"Position parameter is inproperly set. Format: [x],[y]");
                                 break;
                             }
-                        case "-showAfterInteraction":
+                        case "-showafterinteraction":
                             {
                                 showAfterInteraction = true;
                                 break;
                             }
-                        case "-padOffset":
+                        case "-padoffset":
                             {
                                 padOffset = ArgumentVec2(enumerator,
                                     $"Pad offset parameter is inproperly set. Format: [x],[y]");
                                 break;
                             }
-                        case "-padColor":
+                        case "-padcolor":
                             {
                                 padColor = ArgumentColor(enumerator,
                                     $"Pad brake color parameter is inproperly set. Format: [r],[g],[b],[a]");
                                 break;
                             }
-                        case "-padBrakeColor":
+                        case "-padbrakecolor":
                             {
                                 padBrakeColor = ArgumentColor(enumerator,
                                     $"Pad brake color parameter is inproperly set. Format: [r],[g],[b],[a]");
                                 break;
                             }
-                        case "-padBackgroundColor":
+                        case "-padbackgroundcolor":
                             {
                                 padBackgroundColor = ArgumentColor(enumerator,
                                     $"Pad background color parameter is inproperly set. Format: [r],[g],[b],[a]");
                                 break;
                             }
-                        case "-padStartPos":
-                        case "-padStartPosition":
+                        case "-padstartpos":
+                        case "-padstartposition":
                             {
                                 padStartPosition = ArgumentVec3(enumerator,
                                     $"Pad start position parameter is inproperly set. Format: [x],[y],[z]");
                                 break;
                             }
-                        case "-padEndPos":
-                        case "-padEndPosition":
+                        case "-padendpos":
+                        case "-padendposition":
                             {
                                 padEndPosition = ArgumentVec3(enumerator,
                                     $"Pad end position parameter is inproperly set. Format: [x],[y],[z]");
@@ -538,12 +538,12 @@ namespace ClipInputCLI
                                 break;
                             }
                         case "-start":
-                        case "-startOffset":
+                        case "-startoffset":
                             {
                                 startOffset = ArgumentTimeSpan(enumerator);
                                 break;
                             }
-                        case "-adjustToFPS":
+                        case "-adjusttofps":
                             {
                                 adjustToFPS = true;
                                 break;
