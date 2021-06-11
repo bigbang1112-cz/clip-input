@@ -432,6 +432,8 @@ namespace ClipInputCLI
                 var padEndPosition = default(Vec3?);
                 var theme = default(Theme?);
                 var startOffset = default(TimeSpan?);
+                var adjustToFPS = default(bool?);
+                var fps = default(float?);
 
                 var enumerator = ((IEnumerable<string>)args).GetEnumerator();
 
@@ -654,6 +656,20 @@ namespace ClipInputCLI
 
                                 break;
                             }
+                        case "-adjustToFPS":
+                            {
+                                adjustToFPS = true;
+                                break;
+                            }
+                        case "-fps":
+                            {
+                                enumerator.MoveNext();
+                                var str = enumerator.Current;
+
+                                fps = float.Parse(str, CultureInfo.InvariantCulture);
+
+                                break;
+                            }
                     }
                 }
 
@@ -690,6 +706,8 @@ namespace ClipInputCLI
                     if (config.PadEndPosition is not null) tool.PadEndPosition = (Vec3)config.PadEndPosition;
                     if (config.Theme.HasValue) tool.Theme = config.Theme.Value;
                     if (config.StartOffset.HasValue) tool.StartOffset = TimeSpan.FromSeconds(config.StartOffset.Value);
+                    if (config.AdjustToFPS.HasValue) tool.AdjustToFPS = config.AdjustToFPS.Value;
+                    if (config.FPS.HasValue) tool.FPS = config.FPS.Value;
                     if (config.Keys is not null)
                     {
                         foreach (var key in config.Keys)
@@ -720,6 +738,8 @@ namespace ClipInputCLI
                 if (padEndPosition.HasValue) tool.PadEndPosition = padEndPosition.Value;
                 if (theme.HasValue) tool.Theme = theme.Value;
                 if (startOffset.HasValue) tool.StartOffset = startOffset.Value;
+                if (adjustToFPS.HasValue) tool.AdjustToFPS = adjustToFPS.Value;
+                if (fps.HasValue) tool.FPS = fps.Value;
 
                 Console.WriteLine();
                 Console.WriteLine($"Beginning the process...");

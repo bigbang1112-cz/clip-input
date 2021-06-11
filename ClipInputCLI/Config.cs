@@ -23,6 +23,8 @@ namespace ClipInputCLI
         public float[] PadEndPosition { get; set; }
         public Theme? Theme { get; set; }
         public float? StartOffset { get; set; }
+        public bool? AdjustToFPS { get; set; }
+        public float? FPS { get; set; }
         public KeyboardKey[] Keys { get; set; }
     }
 }

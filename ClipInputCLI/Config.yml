@@ -11,6 +11,8 @@ PadStartPosition: [0.16, -0.45, 0]
 PadEndPosition: [0.6, 0, 0]
 Theme: Black
 StartOffset: 0
+AdjustToFPS: false
+FPS: 30
 
 Keys:
 - EntryName: Accelerate

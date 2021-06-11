@@ -29,6 +29,8 @@ namespace ClipInput
         public Theme Theme { get; set; }
         public TimeSpan StartOffset { get; set; }
         public KeyboardKey[] Keys { get; set; }
+        public bool AdjustToFPS { get; set; }
+        public float FPS { get; set; } = 30;
 
         public ClipInputTool(GameBox gbx) : base(gbx)
         {
@@ -328,12 +330,14 @@ namespace ClipInput
                             {
                                 if (!pressedKeyDictionary[key])
                                 {
+                                    var time = entry.Time;
+
                                     if (currentImageDictionary[key] != null)
                                     {
-                                        currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(entry.Time, key.Position);
+                                        currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(time, key.Position);
                                     }
 
-                                    var blockImage = CreateImageBlock(string.Format(key.ImageOn, (int)Theme), entry.Time, key.Position);
+                                    var blockImage = CreateImageBlock(string.Format(key.ImageOn, (int)Theme), time, key.Position);
 
                                     trackDictionary[key].Blocks.Add(blockImage);
                                     currentImageDictionary[key] = blockImage;
@@ -342,9 +346,20 @@ namespace ClipInput
                             }
                             else
                             {
-                                currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(entry.Time, key.Position);
+                                var prevTime = currentImageDictionary[key].Effect.Keys[0].Time;
+                                var time = entry.Time;
 
-                                var blockImage = CreateImageBlock(string.Format(key.ImageOff, (int)Theme), entry.Time, key.Position);
+                                if (AdjustToFPS)
+                                {
+                                    var blockLength = time.TotalSeconds - prevTime;
+
+                                    if (blockLength < 1 / FPS)
+                                        time = TimeSpan.FromSeconds(prevTime + 1 / FPS);
+                                }
+
+                                currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(time, key.Position);
+
+                                var blockImage = CreateImageBlock(string.Format(key.ImageOff, (int)Theme), time, key.Position);
 
                                 trackDictionary[key].Blocks.Add(blockImage);
                                 currentImageDictionary[key] = blockImage;
