@@ -446,79 +446,28 @@ namespace ClipInputCLI
                         case "-aspectRatio":
                         case "-ratio":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                var split = str.Split(':');
-                                if (split.Length != 2)
-                                    throw new FormatException($"Aspect ratio parameter is inproperly set. Format: [x]:[y]");
-
-                                var ratioX = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                var ratioY = float.Parse(split[1], CultureInfo.InvariantCulture);
-
-                                aspectRatio = (ratioX, ratioY);
+                                aspectRatio = ArgumentVec2(enumerator,
+                                    $"Aspect ratio parameter is inproperly set. Format: [x]:[y]");
                                 break;
                             }
                         case "-scale":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                var split = str.Split(',');
-                                if (split.Length == 1)
-                                {
-                                    var scl = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                    scale = (scl, scl);
-                                }
-                                else if (split.Length == 2)
-                                {
-                                    var sclX = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                    var sclY = float.Parse(split[1], CultureInfo.InvariantCulture);
-                                    scale = (sclX, sclY);
-                                }
-                                else
-                                    throw new FormatException($"Scale parameter is inproperly set. Format: [scale] or [scaleX],[scaleY]");
-
+                                scale = ArgumentVec2OrFloat(enumerator,
+                                    $"Scale parameter is inproperly set. Format: [scale] or [scaleX],[scaleY]");
                                 break;
                             }
                         case "-space":
                         case "-spacing":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                var split = str.Split(',');
-                                if (split.Length == 1)
-                                {
-                                    var spa = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                    space = (spa, spa);
-                                }
-                                else if (split.Length == 2)
-                                {
-                                    var spaX = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                    var spaY = float.Parse(split[1], CultureInfo.InvariantCulture);
-                                    space = (spaX, spaY);
-                                }
-                                else
-                                    throw new FormatException($"Scale parameter is inproperly set. Format: [space] or [spaceX],[spaceY]");
-
+                                space = ArgumentVec2OrFloat(enumerator,
+                                    $"Scale parameter is inproperly set. Format: [space] or [spaceX],[spaceY]");
                                 break;
                             }
                         case "-position":
                         case "-pos":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                var split = str.Split(',');
-                                if (split.Length != 2)
-                                    throw new FormatException($"Position parameter is inproperly set. Format: [x],[y]");
-
-                                var x = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                var y = float.Parse(split[1], CultureInfo.InvariantCulture);
-
-                                pos = (x, y);
-
+                                pos = ArgumentVec2(enumerator,
+                                    $"Position parameter is inproperly set. Format: [x],[y]");
                                 break;
                             }
                         case "-showAfterInteraction":
@@ -528,132 +477,51 @@ namespace ClipInputCLI
                             }
                         case "-padOffset":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                var split = str.Split(',');
-                                if (split.Length != 2)
-                                    throw new FormatException($"Pad offset parameter is inproperly set. Format: [x],[y]");
-
-                                var x = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                var y = float.Parse(split[1], CultureInfo.InvariantCulture);
-
-                                padOffset = (x, y);
-
+                                padOffset = ArgumentVec2(enumerator,
+                                    $"Pad offset parameter is inproperly set. Format: [x],[y]");
                                 break;
                             }
                         case "-padColor":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                var split = str.Split(',');
-                                if (split.Length != 4)
-                                    throw new FormatException($"Pad color parameter is inproperly set. Format: [r],[g],[b],[a]");
-
-                                var r = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                var g = float.Parse(split[1], CultureInfo.InvariantCulture);
-                                var b = float.Parse(split[2], CultureInfo.InvariantCulture);
-                                var a = float.Parse(split[3], CultureInfo.InvariantCulture);
-
-                                padColor = (r, g, b, a);
-
+                                padColor = ArgumentColor(enumerator,
+                                    $"Pad brake color parameter is inproperly set. Format: [r],[g],[b],[a]");
                                 break;
                             }
                         case "-padBrakeColor":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                var split = str.Split(',');
-                                if (split.Length != 4)
-                                    throw new FormatException($"Pad brake color parameter is inproperly set. Format: [r],[g],[b],[a]");
-
-                                var r = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                var g = float.Parse(split[1], CultureInfo.InvariantCulture);
-                                var b = float.Parse(split[2], CultureInfo.InvariantCulture);
-                                var a = float.Parse(split[3], CultureInfo.InvariantCulture);
-
-                                padBrakeColor = (r, g, b, a);
-
+                                padBrakeColor = ArgumentColor(enumerator,
+                                    $"Pad brake color parameter is inproperly set. Format: [r],[g],[b],[a]");
                                 break;
                             }
                         case "-padBackgroundColor":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                var split = str.Split(',');
-                                if (split.Length != 4)
-                                    throw new FormatException($"Pad background color parameter is inproperly set. Format: [r],[g],[b],[a]");
-
-                                var r = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                var g = float.Parse(split[1], CultureInfo.InvariantCulture);
-                                var b = float.Parse(split[2], CultureInfo.InvariantCulture);
-                                var a = float.Parse(split[3], CultureInfo.InvariantCulture);
-
-                                padBackgroundColor = (r, g, b, a);
-
+                                padBackgroundColor = ArgumentColor(enumerator,
+                                    $"Pad background color parameter is inproperly set. Format: [r],[g],[b],[a]");
                                 break;
                             }
                         case "-padStartPos":
                         case "-padStartPosition":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                var split = str.Split(',');
-                                if (split.Length != 3)
-                                    throw new FormatException($"Pad start position parameter is inproperly set. Format: [x],[y],[z]");
-
-                                var x = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                var y = float.Parse(split[1], CultureInfo.InvariantCulture);
-                                var z = float.Parse(split[2], CultureInfo.InvariantCulture);
-
-                                padStartPosition = (x, y, z);
-
+                                padStartPosition = ArgumentVec3(enumerator,
+                                    $"Pad start position parameter is inproperly set. Format: [x],[y],[z]");
                                 break;
                             }
                         case "-padEndPos":
                         case "-padEndPosition":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                var split = str.Split(',');
-                                if (split.Length != 3)
-                                    throw new FormatException($"Pad end position parameter is inproperly set. Format: [x],[y],[z]");
-
-                                var x = float.Parse(split[0], CultureInfo.InvariantCulture);
-                                var y = float.Parse(split[1], CultureInfo.InvariantCulture);
-                                var z = float.Parse(split[2], CultureInfo.InvariantCulture);
-
-                                padEndPosition = (x, y, z);
-
+                                padEndPosition = ArgumentVec3(enumerator,
+                                    $"Pad end position parameter is inproperly set. Format: [x],[y],[z]");
                                 break;
                             }
                         case "-theme":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                if (Enum.TryParse(str, true, out Theme t))
-                                    theme = t;
-                                else
-                                    throw new FormatException($"Theme '{str}' does not exist.");
-
+                                theme = ArgumentEnum<Theme>(enumerator, "Theme '{0}' does not exist.");
                                 break;
                             }
                         case "-start":
                         case "-startOffset":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                var offset = float.Parse(str, CultureInfo.InvariantCulture);
-
-                                startOffset = TimeSpan.FromSeconds(offset);
-
+                                startOffset = ArgumentTimeSpan(enumerator);
                                 break;
                             }
                         case "-adjustToFPS":
@@ -663,11 +531,7 @@ namespace ClipInputCLI
                             }
                         case "-fps":
                             {
-                                enumerator.MoveNext();
-                                var str = enumerator.Current;
-
-                                fps = float.Parse(str, CultureInfo.InvariantCulture);
-
+                                fps = ArgumentFloat(enumerator);
                                 break;
                             }
                     }
@@ -869,6 +733,104 @@ namespace ClipInputCLI
             }
 
             throw new Exception($"This directory is likely not the installation directory of {version}.");
+        }
+
+        public static float ArgumentFloat(IEnumerator<string> enumerator)
+        {
+            enumerator.MoveNext();
+            var str = enumerator.Current;
+
+            return float.Parse(str, CultureInfo.InvariantCulture);
+        }
+
+        public static TimeSpan ArgumentTimeSpan(IEnumerator<string> enumerator)
+        {
+            enumerator.MoveNext();
+            var str = enumerator.Current;
+
+            var offset = float.Parse(str, CultureInfo.InvariantCulture);
+
+            return TimeSpan.FromSeconds(offset);
+        }
+
+        public static Vec2 ArgumentVec2(IEnumerator<string> enumerator, string exceptionMessage)
+        {
+            enumerator.MoveNext();
+            var str = enumerator.Current;
+
+            var split = str.Split(',');
+            if (split.Length != 2)
+                throw new FormatException(exceptionMessage);
+
+            var x = float.Parse(split[0], CultureInfo.InvariantCulture);
+            var y = float.Parse(split[1], CultureInfo.InvariantCulture);
+
+            return (x, y);
+        }
+
+        public static Vec2 ArgumentVec2OrFloat(IEnumerator<string> enumerator, string exceptionMessage)
+        {
+            enumerator.MoveNext();
+            var str = enumerator.Current;
+
+            var split = str.Split(',');
+            if (split.Length == 1)
+            {
+                var value = float.Parse(split[0], CultureInfo.InvariantCulture);
+                return (value, value);
+            }
+            else if (split.Length == 2)
+            {
+                var x = float.Parse(split[0], CultureInfo.InvariantCulture);
+                var y = float.Parse(split[1], CultureInfo.InvariantCulture);
+                return (x, y);
+            }
+            else
+                throw new FormatException(exceptionMessage);
+        }
+
+        public static Vec3 ArgumentVec3(IEnumerator<string> enumerator, string exceptionMessage)
+        {
+            enumerator.MoveNext();
+            var str = enumerator.Current;
+
+            var split = str.Split(',');
+            if (split.Length != 3)
+                throw new FormatException(exceptionMessage);
+
+            var x = float.Parse(split[0], CultureInfo.InvariantCulture);
+            var y = float.Parse(split[1], CultureInfo.InvariantCulture);
+            var z = float.Parse(split[2], CultureInfo.InvariantCulture);
+
+            return (x, y, z);
+        }
+
+        public static Vec4 ArgumentColor(IEnumerator<string> enumerator, string exceptionMessage)
+        {
+            enumerator.MoveNext();
+            var str = enumerator.Current;
+
+            var split = str.Split(',');
+            if (split.Length != 4)
+                throw new FormatException(exceptionMessage);
+
+            var r = float.Parse(split[0], CultureInfo.InvariantCulture);
+            var g = float.Parse(split[1], CultureInfo.InvariantCulture);
+            var b = float.Parse(split[2], CultureInfo.InvariantCulture);
+            var a = float.Parse(split[3], CultureInfo.InvariantCulture);
+
+            return (r, g, b, a);
+        }
+
+        public static TEnum ArgumentEnum<TEnum>(IEnumerator<string> enumerator, string exceptionMessage) where TEnum : struct, Enum
+        {
+            enumerator.MoveNext();
+            var str = enumerator.Current;
+
+            if (Enum.TryParse(str, true, out TEnum t))
+                return t;
+            else
+                throw new FormatException(string.Format(exceptionMessage, str));
         }
     }
 }
