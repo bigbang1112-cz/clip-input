@@ -18,11 +18,12 @@ namespace ClipInputCLI
         public float[] PadOffset { get; set; }
         public float[] PadColor { get; set; }
         public float[] PadBrakeColor { get; set; }
-        public float[] PadBackgroundColor { get; set; }
         public float[] PadStartPosition { get; set; }
         public float[] PadEndPosition { get; set; }
         public Theme? Theme { get; set; }
         public float? StartOffset { get; set; }
+        public bool? AdjustToFPS { get; set; }
+        public float? FPS { get; set; }
         public KeyboardKey[] Keys { get; set; }
     }
 }

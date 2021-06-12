@@ -71,8 +71,9 @@ Optional arguments:
 | -padOffset | 0.385,0 | \[x],\[y\] | Tells how far from each other should the base pads be
 | -padColor | 0.11,0.44,0.69,1 | \[r],\[g\],\[b\],\[a\] | Color of the pad
 | -padBrakeColor | 0.69,0.18,0.11,1 | \[r],\[g\],\[b\],\[a\] | Color of the analog brake
-| -padBackgroundColor | 0.3,0.3,0.3,0.3 | \[r\],\[g\],\[b\],\[a\] | Background color of the pad
-| -padStartPos, -padStartPosition | 0.16,-0.45,0 | \[x\],\[y\],\[z\] | Starting symmetric point of the triangle
-| -padEndPos -padEndPosition | 0.6,0,0 | \[x\],\[y\],\[z\] | Ending meeting point of the triangle
+| -padStartPos, -padStartPosition | 0.285,-0.45,0 | \[x\],\[y\],\[z\] | Starting symmetric point of the triangle
+| -padEndPos -padEndPosition | 1.08,0,0 | \[x\],\[y\],\[z\] | Ending meeting point of the triangle
 | -theme | black | \[black/white\] | Visual style of the input visualization
 | -start, -startOffset | 0 | \[seconds\] | Delay in seconds before the whole visualizer starts
+| -adjustToFps | false | \[true/false\] | If the activation state should be at least a frame long
+| -fps | 30 | \[num\] | Expected FPS for calculating minimal activation time

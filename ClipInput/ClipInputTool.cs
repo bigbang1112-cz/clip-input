@@ -23,12 +23,13 @@ namespace ClipInput
         public Vec2 PadOffset { get; set; }
         public Vec4 PadColor { get; set; } = (1, 1, 1, 1);
         public Vec4 PadBrakeColor { get; set; } = (1, 0, 0, 1);
-        public Vec4 PadBackgroundColor { get; set; } = (0, 0, 0, 1);
         public Vec3 PadStartPosition { get; set; }
         public Vec3 PadEndPosition { get; set; }
         public Theme Theme { get; set; }
         public TimeSpan StartOffset { get; set; }
         public KeyboardKey[] Keys { get; set; }
+        public bool AdjustToFPS { get; set; }
+        public float FPS { get; set; } = 30;
 
         public ClipInputTool(GameBox gbx) : base(gbx)
         {
@@ -40,7 +41,6 @@ namespace ClipInput
             PadOffset = (0.385f, 0);
             PadColor = (0.11f, 0.44f, 0.69f, 1);
             PadBrakeColor = (0.69f, 0.18f, 0.11f, 1);
-            PadBackgroundColor = (0.3f, 0.3f, 0.3f, 0.3f);
             PadStartPosition = (0.16f, -0.45f, 0);
             PadEndPosition = (0.6f, 0, 0);
             Theme = Theme.Black;
@@ -221,10 +221,12 @@ namespace ClipInput
                         hasBrakeReal = true;
                         break;
                     case "AccelerateReal":
-                        hasAccelReal = true;
+                        if ((entry as ControlEntryAnalog).Value >= 0)
+                            hasAccelReal = true;
                         break;
                     case "BrakeReal":
-                        hasBrakeReal = true;
+                        if ((entry as ControlEntryAnalog).Value >= 0)
+                            hasBrakeReal = true;
                         break;
                     case "Steer (analog)":
                     case "Steer":
@@ -234,7 +236,10 @@ namespace ClipInput
             }
 
             Console.WriteLine("Processing acceleration input...");
-            ProcessDigitalInput(entries, eventsDuration, tracks, onlyAcceleration: hasAnalogSteering);
+            ProcessDigitalInput(entries, eventsDuration, tracks,
+                onlyAcceleration: hasAnalogSteering,
+                usesAnalogAccel: hasAccelReal,
+                usesAnalogBrake: hasBrakeReal);
 
             if (hasAnalogSteering)
             {
@@ -250,6 +255,12 @@ namespace ClipInput
                     hasAccelReal ? Keys.FirstOrDefault(x => x.EntryName == "Accelerate") : null,
                     hasBrakeReal ? Keys.FirstOrDefault(x => x.EntryName == "Brake") : null);
             }
+
+            // Defines the start of the first event
+            var eventStartTime = new TimeSpan();
+
+            if (!ShowAfterInteraction)
+                eventStartTime = TimeSpan.FromMilliseconds(Math.Min(0, entries.Min(x => x.Time.TotalMilliseconds)));
 
             clip.Tracks = tracks;
 
@@ -282,14 +293,49 @@ namespace ClipInput
             return new GameBox<CGameCtnMediaClip>(clip);
         }
 
-        private void ProcessDigitalInput(IEnumerable<ControlEntry> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks, bool onlyAcceleration)
+        private void ProcessDigitalInput(IEnumerable<ControlEntry> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks,
+            bool onlyAcceleration, bool usesAnalogAccel, bool usesAnalogBrake)
         {
             var trackDictionary = new Dictionary<KeyboardKey, CGameCtnMediaTrack>();
             var currentImageDictionary = new Dictionary<KeyboardKey, CGameCtnMediaBlockImage>();
             var pressedKeyDictionary = new Dictionary<KeyboardKey, bool>();
 
+            // Defines the start of the first event
+            var eventStartTime = new TimeSpan();
+
+            if (!ShowAfterInteraction)
+                eventStartTime = TimeSpan.FromMilliseconds(Math.Min(0, entries.Min(x => x.Time.TotalMilliseconds)));
+
+            (string imageOff, string imageOn) DetermineImages(KeyboardKey key, bool isSteerInput)
+            {
+                var imageOff = key.ImageOff;
+                var imageOn = key.ImageOn;
+
+                if (!isSteerInput)
+                {
+                    if (usesAnalogAccel && key.EntryName == "Accelerate")
+                    {
+                        imageOff = "{0}_Analog.png";
+                        imageOn = "{0}_Analog_Accel.png";
+                    }
+
+                    if (usesAnalogBrake && key.EntryName == "Brake")
+                    {
+                        imageOff = "{0}_Analog.png";
+                        imageOn = "{0}_Analog_Brake.png";
+                    }
+                }
+
+                return (
+                    string.Format(imageOff, (int)Theme),
+                    string.Format(imageOn, (int)Theme)
+                );
+            }
+
             foreach (var key in Keys)
             {
+                var (imageOff, imageOn) = DetermineImages(key, key.IsSteerInput);
+
                 if (!onlyAcceleration || !key.IsSteerInput)
                 {
                     var track = CreateMediaTrack(key.TrackName);
@@ -300,15 +346,7 @@ namespace ClipInput
 
                     if (!ShowAfterInteraction)
                     {
-                        // Defines the start of the first event
-                        TimeSpan eventStartTime;
-
-                        if (CutoffOutside)
-                            eventStartTime = new TimeSpan();
-                        else
-                            eventStartTime = TimeSpan.FromMilliseconds(Math.Min(0, entries.Min(x => x.Time.TotalMilliseconds)));
-
-                        var blockImage = CreateImageBlock(string.Format(key.ImageOff, (int)Theme), eventStartTime, key.Position);
+                        var blockImage = CreateImageBlock(imageOff, eventStartTime, key.Position);
 
                         trackDictionary[key].Blocks.Add(blockImage);
                         currentImageDictionary[key] = blockImage;
@@ -320,6 +358,8 @@ namespace ClipInput
             {
                 foreach (var key in Keys)
                 {
+                    var (imageOff, imageOn) = DetermineImages(key, key.IsSteerInput);
+
                     if (!onlyAcceleration || !key.IsSteerInput)
                     {
                         if (key.EntryNames.Contains(entry.Name))
@@ -328,12 +368,14 @@ namespace ClipInput
                             {
                                 if (!pressedKeyDictionary[key])
                                 {
+                                    var time = entry.Time;
+
                                     if (currentImageDictionary[key] != null)
                                     {
-                                        currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(entry.Time, key.Position);
+                                        currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(time, key.Position);
                                     }
 
-                                    var blockImage = CreateImageBlock(string.Format(key.ImageOn, (int)Theme), entry.Time, key.Position);
+                                    var blockImage = CreateImageBlock(imageOn, time, key.Position);
 
                                     trackDictionary[key].Blocks.Add(blockImage);
                                     currentImageDictionary[key] = blockImage;
@@ -342,9 +384,20 @@ namespace ClipInput
                             }
                             else
                             {
-                                currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(entry.Time, key.Position);
+                                var prevTime = currentImageDictionary[key].Effect.Keys[0].Time;
+                                var time = entry.Time;
 
-                                var blockImage = CreateImageBlock(string.Format(key.ImageOff, (int)Theme), entry.Time, key.Position);
+                                if (AdjustToFPS)
+                                {
+                                    var blockLength = time.TotalSeconds - prevTime;
+
+                                    if (blockLength < 1 / FPS)
+                                        time = TimeSpan.FromSeconds(prevTime + 1 / FPS);
+                                }
+
+                                currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(time, key.Position);
+
+                                var blockImage = CreateImageBlock(imageOff, time, key.Position);
 
                                 trackDictionary[key].Blocks.Add(blockImage);
                                 currentImageDictionary[key] = blockImage;
@@ -377,26 +430,11 @@ namespace ClipInput
             var trackAccelPad = CreateMediaTrack("Pad Acceleration");
             tracks.Add(trackAccelPad);
 
-            var accelPad = default(CGameCtnMediaTrack);
-            var accelPadQuad = default(CGameCtnMediaBlockTriangles);
-            if (accelKey is not null)
-            {
-                accelPad = CreateMediaTrack("Pad Acceleration Bg");
-                accelPad.Blocks.Add(CreateKeyPadBackground(accelKey, eventStartTime, eventsDuration));
-                tracks.Add(accelPad);
-            }
-
             var trackBrakePad = CreateMediaTrack("Pad Brake");
             tracks.Add(trackBrakePad);
 
-            var brakePad = default(CGameCtnMediaTrack);
+            var accelPadQuad = default(CGameCtnMediaBlockTriangles);
             var brakePadQuad = default(CGameCtnMediaBlockTriangles);
-            if (brakeKey is not null)
-            {
-                brakePad = CreateMediaTrack("Pad Brake Bg");
-                brakePad.Blocks.Add(CreateKeyPadBackground(brakeKey, eventStartTime, eventsDuration));
-                tracks.Add(brakePad);
-            }
 
             var lastEntry = entries.Last();
 
@@ -466,13 +504,12 @@ namespace ClipInput
             if (!ShowAfterInteraction)
                 eventStartTime = TimeSpan.FromMilliseconds(Math.Min(0, entries.Min(x => x.Time.TotalMilliseconds)));
 
-            var leftPad = CreatePad(Side.Left, $"{(int)Theme}_PadLeft.png", eventStartTime, eventsDuration, tracks);
-            var rightPad = CreatePad(Side.Right, $"{(int)Theme}_PadRight.png", eventStartTime, eventsDuration, tracks);
+            CreatePad(Side.Left, $"{(int)Theme}_PadLeft_2.png", eventStartTime, eventsDuration, tracks);
+            CreatePad(Side.Right, $"{(int)Theme}_PadRight_2.png", eventStartTime, eventsDuration, tracks);
 
             var trackPad = CreateMediaTrack("Pad");
             tracks.Add(trackPad);
 
-            var pads = new CGameCtnMediaBlockTriangles[] { leftPad, rightPad };
             var padQuad = default(CGameCtnMediaBlockTriangles);
 
             var inverse = -1;
@@ -515,45 +552,6 @@ namespace ClipInput
             }
         }
 
-        private CGameCtnMediaBlockTriangles CreateKeyPadBackground(KeyboardKey key, TimeSpan eventStartTime, TimeSpan eventsDuration)
-        {
-            Console.WriteLine("Creating key pad background...");
-
-            var trianglePad = new CGameCtnMediaBlockTriangles2D()
-            {
-                Vertices = new Vec4[] { PadBackgroundColor, PadBackgroundColor, PadBackgroundColor, PadBackgroundColor },
-            };
-            trianglePad.CreateChunk<CGameCtnMediaBlockTriangles.Chunk03029001>();
-
-            trianglePad.Triangles = new Int3[] { (0, 1, 2), (0, 2, 3) };
-
-            var positions = new Vec3[]
-            {
-                (new Vec3(-0.2f, -0.2f, 0) + key.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(0.2f, -0.2f, 0) + key.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(0.2f, 0.2f, 0) + key.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(-0.2f, 0.2f, 0) + key.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1)
-            };
-
-            TransformTriangles(ref positions);
-
-            var key1 = new CGameCtnMediaBlockTriangles.Key(trianglePad)
-            {
-                Time = (float)eventStartTime.TotalSeconds,
-                Positions = positions
-            };
-            trianglePad.Keys.Add(key1);
-
-            var key2 = new CGameCtnMediaBlockTriangles.Key(trianglePad)
-            {
-                Time = (float)eventsDuration.TotalSeconds,
-                Positions = positions
-            };
-            trianglePad.Keys.Add(key2);
-
-            return trianglePad;
-        }
-
         private CGameCtnMediaBlockTriangles CreateKeyPadMoment(KeyboardKey keyboardKey, float value, TimeSpan time)
         {
             if (value == 0) return null;
@@ -574,10 +572,10 @@ namespace ClipInput
 
             var positions = new Vec3[]
             {
-                (new Vec3(-0.2f, -0.2f, 0) + keyboardKey.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(0.2f, -0.2f, 0) + keyboardKey.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(0.2f, 0.2f, 0) + keyboardKey.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(-0.2f, 0.2f, 0) + keyboardKey.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1)
+                (new Vec3(-0.2f, -0.2f, 0) + keyboardKey.Position) * Scale,
+                (new Vec3(0.2f, -0.2f, 0) + keyboardKey.Position) * Scale,
+                (new Vec3(0.2f, 0.2f, 0) + keyboardKey.Position) * Scale,
+                (new Vec3(-0.2f, 0.2f, 0) + keyboardKey.Position) * Scale
             };
 
             TransformTriangles(ref positions);
@@ -615,7 +613,7 @@ namespace ClipInput
             return trianglePad;
         }
 
-        private CGameCtnMediaBlockTriangles CreatePad(Side side, string image, TimeSpan eventStartTime, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks)
+        private void CreatePad(Side side, string image, TimeSpan eventStartTime, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks)
         {
             var trackBase = CreateMediaTrack($"Pad {side} Base");
             tracks.Add(trackBase);
@@ -627,61 +625,13 @@ namespace ClipInput
             var imageBase = CreateImageBlock(image, eventStartTime, PadOffset * (sideMultiplier, 1), (2, 2));
             imageBase.Effect.Keys[1] = CreateSimiKey(eventsDuration, PadOffset * (sideMultiplier, 1), (2, 2));
             trackBase.Blocks.Add(imageBase);
-
-            var trackBackground = CreateMediaTrack($"Pad {side} Bg");
-            tracks.Add(trackBackground);
-
-            var triangleBackground = CreatePadBackground(side, eventStartTime, eventsDuration);
-            trackBackground.Blocks.Add(triangleBackground);
-
-            return triangleBackground;
-        }
-
-        private CGameCtnMediaBlockTriangles CreatePadBackground(Side side, TimeSpan eventStartTime, TimeSpan eventsDuration)
-        {
-            Console.WriteLine("Creating pad background...");
-
-            var sideMultiplier = 1;
-            if (side == Side.Right)
-                sideMultiplier = -1;
-
-            var trianglePad = new CGameCtnMediaBlockTriangles2D()
-            {
-                Vertices = new Vec4[] { PadBackgroundColor, PadBackgroundColor, PadBackgroundColor, PadBackgroundColor },
-            };
-            trianglePad.CreateChunk<CGameCtnMediaBlockTriangles.Chunk03029001>();
-
-            trianglePad.Triangles = new Int3[] { (0, 1, 2), (0, 2, 3) };
-
-            var positions = new Vec3[]
-            {
-                PadStartPosition * (sideMultiplier, 1, 1) * Scale,
-                PadEndPosition * (sideMultiplier, 1, 1) * Scale,
-                PadEndPosition * (sideMultiplier, 1, 1) * Scale,
-                PadStartPosition * (1, -1, 1) * (sideMultiplier, 1, 1) * Scale
-            };
-
-            TransformTriangles(ref positions);
-
-            var key1 = new CGameCtnMediaBlockTriangles.Key(trianglePad)
-            {
-                Time = (float)eventStartTime.TotalSeconds,
-                Positions = positions
-            };
-            trianglePad.Keys.Add(key1);
-
-            var key2 = new CGameCtnMediaBlockTriangles.Key(trianglePad)
-            {
-                Time = (float)eventsDuration.TotalSeconds,
-                Positions = positions
-            };
-            trianglePad.Keys.Add(key2);
-
-            return trianglePad;
         }
 
         private void TransformTriangles(ref Vec3[] positions)
         {
+            for (var i = 0; i < positions.Length; i++)
+                positions[i] *= (AspectRatio.Y / AspectRatio.X, 1, 1);
+
             var avgPos = new Vec3();
             foreach (var pos in positions)
                 avgPos += pos;
@@ -710,7 +660,7 @@ namespace ClipInput
                 Triangles = new Int3[] { (0, 1, 2), (0, 2, 3) }
             };
 
-            trianglePad.CreateChunk<CGameCtnMediaBlockTriangles.Chunk03029001>();
+            var chunk001 = trianglePad.CreateChunk<CGameCtnMediaBlockTriangles.Chunk03029001>();
 
             var positions = new Vec3[]
             {
@@ -776,19 +726,19 @@ namespace ClipInput
             return track;
         }
 
-        private CGameCtnMediaBlockImage CreateImageBlock(string imageUrl, TimeSpan time, Vec2 position, Vec2 scale)
+        private CGameCtnMediaBlockImage CreateImageBlock(string image, TimeSpan time, Vec2 position, Vec2 scale, float depth = 0.5f)
         {
             var blockImage = new CGameCtnMediaBlockImage();
 
             switch (GameVersion)
             {
                 case Game.TMUF:
-                    blockImage.Image = new FileRef(2, null, Path.Combine(@"MediaTracker\Images", Path.GetFileName(imageUrl)),
-                    new Uri("https://bigbang1112.eu/projects/clipinput/" + imageUrl));
+                    blockImage.Image = new FileRef(2, null, Path.Combine(@"MediaTracker\Images", Path.GetFileName(image)),
+                    new Uri("https://bigbang1112.eu/projects/clipinput/" + image));
                     break;
                 case Game.ManiaPlanet:
-                    blockImage.Image = new FileRef(3, FileRef.DefaultChecksum, Path.Combine(@"Media\Images\Inputs", Path.GetFileName(imageUrl)),
-                    new Uri("https://bigbang1112.eu/projects/clipinput/" + imageUrl));
+                    blockImage.Image = new FileRef(3, FileRef.DefaultChecksum, Path.Combine(@"Media\Images\Inputs", Path.GetFileName(image)),
+                    new Uri("https://bigbang1112.eu/projects/clipinput/" + image));
                     break;
             }
 
@@ -798,7 +748,7 @@ namespace ClipInput
             {
                 Keys = new List<CControlEffectSimi.Key>
                 {
-                    CreateSimiKey(time, position, scale), null
+                    CreateSimiKey(time, position, scale, depth), null
                 }
             };
 
@@ -816,7 +766,7 @@ namespace ClipInput
             return CreateImageBlock(image, time, position, (1, 1));
         }
 
-        private CControlEffectSimi.Key CreateSimiKey(TimeSpan time, Vec2 position, Vec2 scale)
+        private CControlEffectSimi.Key CreateSimiKey(TimeSpan time, Vec2 position, Vec2 scale, float depth = 0.5f)
         {
             return new CControlEffectSimi.Key
             {
@@ -824,7 +774,7 @@ namespace ClipInput
                 ScaleX = scale.X * Scale.X / (AspectRatio.X / AspectRatio.Y),
                 ScaleY = scale.Y * Scale.Y,
                 Opacity = 1,
-                Depth = 0.5f,
+                Depth = depth,
                 X = position.X * Space.X * Scale.X + Position.X,
                 Y = position.Y * Space.Y * Scale.Y + Position.Y,
                 Unknown = new float[] { 0, 0, 0 }
