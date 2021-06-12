@@ -18,7 +18,6 @@ namespace ClipInputCLI
         public float[] PadOffset { get; set; }
         public float[] PadColor { get; set; }
         public float[] PadBrakeColor { get; set; }
-        public float[] PadBackgroundColor { get; set; }
         public float[] PadStartPosition { get; set; }
         public float[] PadEndPosition { get; set; }
         public Theme? Theme { get; set; }

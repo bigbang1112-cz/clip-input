@@ -26,9 +26,6 @@
   -padBrakeColor
     [r],[g],[b],[a] (default: 0.69,0.18,0.11,1)
       color of the analog brake
-  -padBackgroundColor
-    [r],[g],[b],[a] (default: 0.3,0.3,0.3,0.3)
-      background color of the pad
   -padStartPos
   -padStartPosition
     [x],[y],[z] (default: 0.285,-0.45,0)

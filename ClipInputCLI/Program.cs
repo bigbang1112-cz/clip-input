@@ -447,7 +447,6 @@ namespace ClipInputCLI
                 var padOffset = default(Vec2?);
                 var padColor = default(Vec4?);
                 var padBrakeColor = default(Vec4?);
-                var padBackgroundColor = default(Vec4?);
                 var padStartPosition = default(Vec3?);
                 var padEndPosition = default(Vec3?);
                 var theme = default(Theme?);
@@ -511,12 +510,6 @@ namespace ClipInputCLI
                             {
                                 padBrakeColor = ArgumentColor(enumerator,
                                     $"Pad brake color parameter is inproperly set. Format: [r],[g],[b],[a]");
-                                break;
-                            }
-                        case "-padbackgroundcolor":
-                            {
-                                padBackgroundColor = ArgumentColor(enumerator,
-                                    $"Pad background color parameter is inproperly set. Format: [r],[g],[b],[a]");
                                 break;
                             }
                         case "-padstartpos":
@@ -587,7 +580,6 @@ namespace ClipInputCLI
                     if (config.PadOffset is not null) tool.PadOffset = (Vec2)config.PadOffset;
                     if (config.PadColor is not null) tool.PadColor = (Vec4)config.PadColor;
                     if (config.PadBrakeColor is not null) tool.PadBrakeColor = (Vec4)config.PadBrakeColor;
-                    if (config.PadBackgroundColor is not null) tool.PadBackgroundColor = (Vec4)config.PadBackgroundColor;
                     if (config.PadStartPosition is not null) tool.PadStartPosition = (Vec3)config.PadStartPosition;
                     if (config.PadEndPosition is not null) tool.PadEndPosition = (Vec3)config.PadEndPosition;
                     if (config.Theme.HasValue) tool.Theme = config.Theme.Value;
@@ -619,7 +611,6 @@ namespace ClipInputCLI
                 if (padOffset.HasValue) tool.PadOffset = padOffset.Value;
                 if (padColor.HasValue) tool.PadColor = padColor.Value;
                 if (padBrakeColor.HasValue) tool.PadBrakeColor = padBrakeColor.Value;
-                if (padBackgroundColor.HasValue) tool.PadBackgroundColor = padBackgroundColor.Value;
                 if (padStartPosition.HasValue) tool.PadStartPosition = padStartPosition.Value;
                 if (padEndPosition.HasValue) tool.PadEndPosition = padEndPosition.Value;
                 if (theme.HasValue) tool.Theme = theme.Value;

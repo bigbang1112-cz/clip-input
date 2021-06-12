@@ -23,7 +23,6 @@ namespace ClipInput
         public Vec2 PadOffset { get; set; }
         public Vec4 PadColor { get; set; } = (1, 1, 1, 1);
         public Vec4 PadBrakeColor { get; set; } = (1, 0, 0, 1);
-        public Vec4 PadBackgroundColor { get; set; } = (0, 0, 0, 1);
         public Vec3 PadStartPosition { get; set; }
         public Vec3 PadEndPosition { get; set; }
         public Theme Theme { get; set; }
@@ -42,7 +41,6 @@ namespace ClipInput
             PadOffset = (0.385f, 0);
             PadColor = (0.11f, 0.44f, 0.69f, 1);
             PadBrakeColor = (0.69f, 0.18f, 0.11f, 1);
-            PadBackgroundColor = (0.3f, 0.3f, 0.3f, 0.3f);
             PadStartPosition = (0.16f, -0.45f, 0);
             PadEndPosition = (0.6f, 0, 0);
             Theme = Theme.Black;
@@ -627,49 +625,6 @@ namespace ClipInput
             var imageBase = CreateImageBlock(image, eventStartTime, PadOffset * (sideMultiplier, 1), (2, 2));
             imageBase.Effect.Keys[1] = CreateSimiKey(eventsDuration, PadOffset * (sideMultiplier, 1), (2, 2));
             trackBase.Blocks.Add(imageBase);
-        }
-
-        private CGameCtnMediaBlockTriangles CreatePadBackground(Side side, TimeSpan eventStartTime, TimeSpan eventsDuration)
-        {
-            Console.WriteLine("Creating pad background...");
-
-            var sideMultiplier = 1;
-            if (side == Side.Right)
-                sideMultiplier = -1;
-
-            var trianglePad = new CGameCtnMediaBlockTriangles2D()
-            {
-                Vertices = new Vec4[] { PadBackgroundColor, PadBackgroundColor, PadBackgroundColor, PadBackgroundColor }
-            };
-            var chunk001 = trianglePad.CreateChunk<CGameCtnMediaBlockTriangles.Chunk03029001>();
-
-            trianglePad.Triangles = new Int3[] { (0, 1, 2), (0, 2, 3) };
-
-            var positions = new Vec3[]
-            {
-                PadStartPosition * (sideMultiplier, 1, 1) * Scale,
-                PadEndPosition * (sideMultiplier, 1, 1) * Scale,
-                PadEndPosition * (sideMultiplier, 1, 1) * Scale,
-                PadStartPosition * (1, -1, 1) * (sideMultiplier, 1, 1) * Scale
-            };
-
-            TransformTriangles(ref positions);
-
-            var key1 = new CGameCtnMediaBlockTriangles.Key(trianglePad)
-            {
-                Time = (float)eventStartTime.TotalSeconds,
-                Positions = positions
-            };
-            trianglePad.Keys.Add(key1);
-
-            var key2 = new CGameCtnMediaBlockTriangles.Key(trianglePad)
-            {
-                Time = (float)eventsDuration.TotalSeconds,
-                Positions = positions
-            };
-            trianglePad.Keys.Add(key2);
-
-            return trianglePad;
         }
 
         private void TransformTriangles(ref Vec3[] positions)

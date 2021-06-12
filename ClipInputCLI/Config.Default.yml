@@ -26,9 +26,6 @@ PadColor: [0.11, 0.44, 0.69, 1]
 # Color of the analog brake
 PadBrakeColor: [0.69, 0.18, 0.11, 1]
 
-# Background color of the pad
-PadBackgroundColor: [0.3, 0.3, 0.3, 0.3]
-
 # Starting symmetric point of the triangle
 PadStartPosition: [0.285, -0.45, 0]
 
