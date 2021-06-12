@@ -46,6 +46,8 @@ This version has inputs available. Somehow keyboard inputs are stored as analog 
   - Solution: Install [.NET 5 Runtime](https://dotnet.microsoft.com/download/dotnet/5.0/runtime) and choose x64 or x86 depending on the OS you use.
 - Issue: The analog input is white instead of blue
   - Solution: Analog input is made out of 2D triangles which become always white on PC2 shader quality. To fix this, **set the Shader Quality to at least PC3 Low**.
+- Issue: Some digital inputs aren't appearing in a rendered video
+  - Solution: The tap was so fast that it didn't fit inside the video framerate. Luckily this can be solved with `AdjustToFPS` setting in Config.yml which ensures that each activated state is at least 1/`FPS` seconds long.
 
 ## Settings
 
