@@ -30,10 +30,10 @@ PadBrakeColor: [0.69, 0.18, 0.11, 1]
 PadBackgroundColor: [0.3, 0.3, 0.3, 0.3]
 
 # Starting symmetric point of the triangle
-PadStartPosition: [0.16, -0.45, 0]
+PadStartPosition: [0.285, -0.45, 0]
 
 # Ending meeting point of the triangle
-PadEndPosition: [0.6, 0, 0]
+PadEndPosition: [1.08, 0, 0]
 
 # Visual style of the input visualization
 Theme: Black 

@@ -30,6 +30,7 @@ namespace ClipInputCLI
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine(e.StackTrace);
+                Console.WriteLine();
                 PressAnyKeyToContinue();
             }
         }
@@ -558,7 +559,9 @@ namespace ClipInputCLI
 
                 if (!File.Exists(fileName))
                 {
+                    Console.WriteLine();
                     Console.WriteLine($"File '{fileName}' doesn't exist.");
+                    Console.WriteLine();
                     PressAnyKeyToContinue();
                     return;
                 }

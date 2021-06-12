@@ -481,13 +481,12 @@ namespace ClipInput
             if (!ShowAfterInteraction)
                 eventStartTime = TimeSpan.FromMilliseconds(Math.Min(0, entries.Min(x => x.Time.TotalMilliseconds)));
 
-            var leftPad = CreatePad(Side.Left, $"{(int)Theme}_PadLeft.png", eventStartTime, eventsDuration, tracks);
-            var rightPad = CreatePad(Side.Right, $"{(int)Theme}_PadRight.png", eventStartTime, eventsDuration, tracks);
+            CreatePad(Side.Left, $"{(int)Theme}_PadLeft_2.png", eventStartTime, eventsDuration, tracks);
+            CreatePad(Side.Right, $"{(int)Theme}_PadRight_2.png", eventStartTime, eventsDuration, tracks);
 
             var trackPad = CreateMediaTrack("Pad");
             tracks.Add(trackPad);
 
-            var pads = new CGameCtnMediaBlockTriangles[] { leftPad, rightPad };
             var padQuad = default(CGameCtnMediaBlockTriangles);
 
             var inverse = -1;
@@ -544,10 +543,10 @@ namespace ClipInput
 
             var positions = new Vec3[]
             {
-                (new Vec3(-0.2f, -0.2f, 0) + key.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(0.2f, -0.2f, 0) + key.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(0.2f, 0.2f, 0) + key.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(-0.2f, 0.2f, 0) + key.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1)
+                (new Vec3(-0.2f, -0.2f, 0) + key.Position) * Scale,
+                (new Vec3(0.2f, -0.2f, 0) + key.Position) * Scale,
+                (new Vec3(0.2f, 0.2f, 0) + key.Position) * Scale,
+                (new Vec3(-0.2f, 0.2f, 0) + key.Position) * Scale
             };
 
             TransformTriangles(ref positions);
@@ -589,10 +588,10 @@ namespace ClipInput
 
             var positions = new Vec3[]
             {
-                (new Vec3(-0.2f, -0.2f, 0) + keyboardKey.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(0.2f, -0.2f, 0) + keyboardKey.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(0.2f, 0.2f, 0) + keyboardKey.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1),
-                (new Vec3(-0.2f, 0.2f, 0) + keyboardKey.Position) * Scale * (AspectRatio.Y / AspectRatio.X, 1, 1)
+                (new Vec3(-0.2f, -0.2f, 0) + keyboardKey.Position) * Scale,
+                (new Vec3(0.2f, -0.2f, 0) + keyboardKey.Position) * Scale,
+                (new Vec3(0.2f, 0.2f, 0) + keyboardKey.Position) * Scale,
+                (new Vec3(-0.2f, 0.2f, 0) + keyboardKey.Position) * Scale
             };
 
             TransformTriangles(ref positions);
@@ -630,7 +629,7 @@ namespace ClipInput
             return trianglePad;
         }
 
-        private CGameCtnMediaBlockTriangles CreatePad(Side side, string image, TimeSpan eventStartTime, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks)
+        private void CreatePad(Side side, string image, TimeSpan eventStartTime, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks)
         {
             var trackBase = CreateMediaTrack($"Pad {side} Base");
             tracks.Add(trackBase);
@@ -642,14 +641,6 @@ namespace ClipInput
             var imageBase = CreateImageBlock(image, eventStartTime, PadOffset * (sideMultiplier, 1), (2, 2));
             imageBase.Effect.Keys[1] = CreateSimiKey(eventsDuration, PadOffset * (sideMultiplier, 1), (2, 2));
             trackBase.Blocks.Add(imageBase);
-
-            var trackBackground = CreateMediaTrack($"Pad {side} Bg");
-            tracks.Add(trackBackground);
-
-            var triangleBackground = CreatePadBackground(side, eventStartTime, eventsDuration);
-            trackBackground.Blocks.Add(triangleBackground);
-
-            return triangleBackground;
         }
 
         private CGameCtnMediaBlockTriangles CreatePadBackground(Side side, TimeSpan eventStartTime, TimeSpan eventsDuration)
@@ -662,9 +653,9 @@ namespace ClipInput
 
             var trianglePad = new CGameCtnMediaBlockTriangles2D()
             {
-                Vertices = new Vec4[] { PadBackgroundColor, PadBackgroundColor, PadBackgroundColor, PadBackgroundColor },
+                Vertices = new Vec4[] { PadBackgroundColor, PadBackgroundColor, PadBackgroundColor, PadBackgroundColor }
             };
-            trianglePad.CreateChunk<CGameCtnMediaBlockTriangles.Chunk03029001>();
+            var chunk001 = trianglePad.CreateChunk<CGameCtnMediaBlockTriangles.Chunk03029001>();
 
             trianglePad.Triangles = new Int3[] { (0, 1, 2), (0, 2, 3) };
 
@@ -697,6 +688,9 @@ namespace ClipInput
 
         private void TransformTriangles(ref Vec3[] positions)
         {
+            for (var i = 0; i < positions.Length; i++)
+                positions[i] *= (AspectRatio.Y / AspectRatio.X, 1, 1);
+
             var avgPos = new Vec3();
             foreach (var pos in positions)
                 avgPos += pos;
@@ -725,7 +719,7 @@ namespace ClipInput
                 Triangles = new Int3[] { (0, 1, 2), (0, 2, 3) }
             };
 
-            trianglePad.CreateChunk<CGameCtnMediaBlockTriangles.Chunk03029001>();
+            var chunk001 = trianglePad.CreateChunk<CGameCtnMediaBlockTriangles.Chunk03029001>();
 
             var positions = new Vec3[]
             {

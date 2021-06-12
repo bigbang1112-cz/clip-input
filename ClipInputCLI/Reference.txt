@@ -31,11 +31,11 @@
       background color of the pad
   -padStartPos
   -padStartPosition
-    [x],[y],[z] (default: 0.16,-0.45,0)
+    [x],[y],[z] (default: 0.285,-0.45,0)
       starting symmetric point of the triangle
   -padEndPos
   -padEndPosition
-    [x],[y],[z] (default: 0.6,0,0)
+    [x],[y],[z] (default: 1.08,0,0)
       ending meeting point of the triangle
   -theme
     [black/white] (default: black)

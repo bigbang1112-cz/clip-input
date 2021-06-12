@@ -7,8 +7,8 @@ PadOffset: [0.385, 0]
 PadColor: [0.11, 0.44, 0.69, 1]
 PadBrakeColor: [0.69, 0.18, 0.11, 1]
 PadBackgroundColor: [0.3, 0.3, 0.3, 0.3]
-PadStartPosition: [0.16, -0.45, 0]
-PadEndPosition: [0.6, 0, 0]
+PadStartPosition: [0.285, -0.45, 0]
+PadEndPosition: [1.08, 0, 0]
 Theme: Black
 StartOffset: 0
 AdjustToFPS: false
