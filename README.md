@@ -46,6 +46,8 @@ This version has inputs available. Somehow keyboard inputs are stored as analog 
   - Solution: Install [.NET 5 Runtime](https://dotnet.microsoft.com/download/dotnet/5.0/runtime) and choose x64 or x86 depending on the OS you use.
 - Issue: The analog input is white instead of blue
   - Solution: Analog input is made out of 2D triangles which become always white on PC2 shader quality. To fix this, **set the Shader Quality to at least PC3 Low**.
+- Issue: Some digital inputs aren't appearing in a rendered video
+  - Solution: The tap was so fast that it didn't fit inside the video framerate. Luckily this can be solved with `AdjustToFPS` setting in Config.yml which ensures that each activated state is at least 1/`FPS` seconds long.
 
 ## Settings
 
@@ -71,8 +73,9 @@ Optional arguments:
 | -padOffset | 0.385,0 | \[x],\[y\] | Tells how far from each other should the base pads be
 | -padColor | 0.11,0.44,0.69,1 | \[r],\[g\],\[b\],\[a\] | Color of the pad
 | -padBrakeColor | 0.69,0.18,0.11,1 | \[r],\[g\],\[b\],\[a\] | Color of the analog brake
-| -padBackgroundColor | 0.3,0.3,0.3,0.3 | \[r\],\[g\],\[b\],\[a\] | Background color of the pad
-| -padStartPos, -padStartPosition | 0.16,-0.45,0 | \[x\],\[y\],\[z\] | Starting symmetric point of the triangle
-| -padEndPos -padEndPosition | 0.6,0,0 | \[x\],\[y\],\[z\] | Ending meeting point of the triangle
+| -padStartPos, -padStartPosition | 0.285,-0.45,0 | \[x\],\[y\],\[z\] | Starting symmetric point of the triangle
+| -padEndPos -padEndPosition | 1.08,0,0 | \[x\],\[y\],\[z\] | Ending meeting point of the triangle
 | -theme | black | \[black/white\] | Visual style of the input visualization
 | -start, -startOffset | 0 | \[seconds\] | Delay in seconds before the whole visualizer starts
+| -adjustToFps | false | \[true/false\] | If the activation state should be at least a frame long
+| -fps | 30 | \[num\] | Expected FPS for calculating minimal activation time

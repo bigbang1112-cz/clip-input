@@ -26,20 +26,23 @@ PadColor: [0.11, 0.44, 0.69, 1]
 # Color of the analog brake
 PadBrakeColor: [0.69, 0.18, 0.11, 1]
 
-# Background color of the pad
-PadBackgroundColor: [0.3, 0.3, 0.3, 0.3]
-
 # Starting symmetric point of the triangle
-PadStartPosition: [0.16, -0.45, 0]
+PadStartPosition: [0.285, -0.45, 0]
 
 # Ending meeting point of the triangle
-PadEndPosition: [0.6, 0, 0]
+PadEndPosition: [1.08, 0, 0]
 
 # Visual style of the input visualization
 Theme: Black 
 
 # Delay in second before the whole visualizer starts
 StartOffset: 0 
+
+# If the activation state should be at least a frame long
+AdjustToFPS: false
+
+# Expected FPS for calculating minimal activation time, has effect only if AdjustToFPS is true
+FPS: 30
 
 
 # Keyboard layout
