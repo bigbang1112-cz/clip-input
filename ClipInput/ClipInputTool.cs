@@ -504,8 +504,8 @@ namespace ClipInput
             if (!ShowAfterInteraction)
                 eventStartTime = TimeSpan.FromMilliseconds(Math.Min(0, entries.Min(x => x.Time.TotalMilliseconds)));
 
-            CreatePad(Side.Left, $"{(int)Theme}_PadLeft_2.png", eventStartTime, eventsDuration, tracks);
-            CreatePad(Side.Right, $"{(int)Theme}_PadRight_2.png", eventStartTime, eventsDuration, tracks);
+            CreatePad(Side.Left, $"{(int)Theme}_PadLeft_2.png", $"{(int)Theme}_PadLeft_2_On.png", eventStartTime, eventsDuration, tracks, entries);
+            CreatePad(Side.Right, $"{(int)Theme}_PadRight_2.png", $"{(int)Theme}_PadRight_2_On.png", eventStartTime, eventsDuration, tracks, entries);
 
             var trackPad = CreateMediaTrack("Pad");
             tracks.Add(trackPad);
@@ -613,7 +613,8 @@ namespace ClipInput
             return trianglePad;
         }
 
-        private void CreatePad(Side side, string image, TimeSpan eventStartTime, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks)
+        private void CreatePad(Side side, string image, string imageOn, TimeSpan eventStartTime, TimeSpan eventsDuration,
+            IList<CGameCtnMediaTrack> tracks, IEnumerable<ControlEntry> entries)
         {
             var trackBase = CreateMediaTrack($"Pad {side} Base");
             tracks.Add(trackBase);
@@ -623,7 +624,57 @@ namespace ClipInput
                 sideMultiplier = -1;
 
             var imageBase = CreateImageBlock(image, eventStartTime, PadOffset * (sideMultiplier, 1), (2, 2));
-            imageBase.Effect.Keys[1] = CreateSimiKey(eventsDuration, PadOffset * (sideMultiplier, 1), (2, 2));
+
+            var isPressed = false;
+            var position = PadOffset * (sideMultiplier, 1);
+
+            foreach (var entry in entries)
+            {
+                if ((side == Side.Left && entry.Name == "SteerLeft")
+                  || side == Side.Right && entry.Name == "SteerRight")
+                {
+                    if (entry.IsEnabled)
+                    {
+                        if (!isPressed)
+                        {
+                            var time = entry.Time;
+
+                            if (imageBase != null)
+                            {
+                                imageBase.Effect.Keys[1] = CreateSimiKey(time, position, (2, 2));
+                            }
+
+                            trackBase.Blocks.Add(imageBase);
+
+                            imageBase = CreateImageBlock(imageOn, time, position, (2, 2));
+
+                            isPressed = true;
+                        }
+                    }
+                    else
+                    {
+                        var prevTime = imageBase.Effect.Keys[0].Time;
+                        var time = entry.Time;
+
+                        if (AdjustToFPS)
+                        {
+                            var blockLength = time.TotalSeconds - prevTime;
+
+                            if (blockLength < 1 / FPS)
+                                time = TimeSpan.FromSeconds(prevTime + 1 / FPS);
+                        }
+
+                        imageBase.Effect.Keys[1] = CreateSimiKey(time, position, (2, 2));
+                        trackBase.Blocks.Add(imageBase);
+
+                        imageBase = CreateImageBlock(image, time, position, (2, 2));
+
+                        isPressed = false;
+                    }
+                }
+            }
+
+            imageBase.Effect.Keys[1] = CreateSimiKey(eventsDuration, position, (2, 2));
             trackBase.Blocks.Add(imageBase);
         }
 
