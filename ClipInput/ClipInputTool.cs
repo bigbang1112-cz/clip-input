@@ -7,11 +7,14 @@ using GBX.NET;
 using GBX.NET.Engines.Game;
 using GBX.NET.Engines.Control;
 using GBX.NET.IO;
+using GBX.NET.Engines.MwFoundations;
 
 namespace ClipInput
 {
-    public class ClipInputTool : GameBoxIO<CGameCtnMediaClip>
+    public class ClipInputTool
     {
+        public CMwNod Input { get; }
+
         public Game GameVersion { get; private set; }
 
         public Vec2 AspectRatio { get; set; } = (16, 9);
@@ -31,8 +34,10 @@ namespace ClipInput
         public bool AdjustToFPS { get; set; }
         public float FPS { get; set; } = 30;
 
-        public ClipInputTool(GameBox gbx) : base(gbx)
+        public ClipInputTool(CMwNod node)
         {
+            Input = node;
+
             AspectRatio = (16, 9);
             Scale = (0.5f, 0.5f);
             Space = (1.05f, 1.05f);
@@ -89,9 +94,9 @@ namespace ClipInput
         /// </summary>
         /// <exception cref="TMTurboNotSupportedException"/>
         /// <returns>Output result.</returns>
-        public override GameBox<CGameCtnMediaClip> Process()
+        public CGameCtnMediaClip Process()
         {
-            if (InputGBX.TryNode(out CGameCtnReplayRecord replay))
+            if (Input is CGameCtnReplayRecord replay)
             {
                 Console.WriteLine("CGameCtnReplayRecord (Replay.Gbx) detected...");
 
@@ -118,14 +123,14 @@ namespace ClipInput
                 return ProcessControlEntries(replay.ControlEntries, TimeSpan.FromMilliseconds(replay.EventsDuration));
             }
 
-            if (InputGBX.TryNode(out CGameCtnGhost ghost))
+            if (Input is CGameCtnGhost ghost)
             {
                 Console.WriteLine("CGameCtnGhost (Ghost.Gbx) detected...");
 
                 return ProcessGhost(ghost);
             }
 
-            if (InputGBX.TryNode(out CGameCtnMediaClip clip))
+            if (Input is CGameCtnMediaClip clip)
             {
                 Console.WriteLine("CGameCtnMediaClip (Clip.Gbx) detected...");
 
@@ -137,7 +142,15 @@ namespace ClipInput
             throw new Exception();
         }
 
-        private GameBox<CGameCtnMediaClip> ProcessGhost(CGameCtnGhost ghost)
+        private IEnumerable<CGameCtnGhost> ExtractGhosts(CGameCtnMediaClip clip)
+        {
+            foreach (var track in clip.Tracks)
+                foreach (var block in track.Blocks)
+                    if (block is CGameCtnMediaBlockGhost ghostBlock)
+                        yield return ghostBlock.GhostModel;
+        }
+
+        private CGameCtnMediaClip ProcessGhost(CGameCtnGhost ghost)
         {
             if (ghost == null)
                 throw new ArgumentNullException(nameof(ghost));
@@ -171,7 +184,7 @@ namespace ClipInput
             return ProcessControlEntries(ghost.ControlEntries, TimeSpan.FromMilliseconds(ghost.EventsDuration));
         }
 
-        private GameBox<CGameCtnMediaClip> ProcessControlEntries(IEnumerable<ControlEntry> entries, TimeSpan eventsDuration)
+        private CGameCtnMediaClip ProcessControlEntries(IEnumerable<ControlEntry> entries, TimeSpan eventsDuration)
         {
             if (entries == null)
                 throw new NoInputsException();
@@ -275,13 +288,16 @@ namespace ClipInput
                         switch (block)
                         {
                             case CGameCtnMediaBlockImage blockImage:
-                                blockImage.Effect.Keys.ForEach(x => x.Time += (float)StartOffset.TotalSeconds);
+                                foreach (var key in blockImage.Effect.Keys)
+                                    key.Time += StartOffset;
                                 break;
                             case CGameCtnMediaBlockTriangles blockTriangles:
-                                blockTriangles.Keys.ForEach(x => x.Time += (float)StartOffset.TotalSeconds);
+                                foreach (var key in blockTriangles.Keys)
+                                    key.Time += StartOffset;
                                 break;
                             case CGameCtnMediaBlockText blockText:
-                                blockText.Effect.Keys.ForEach(x => x.Time += (float)StartOffset.TotalSeconds);
+                                foreach (var key in blockText.Effect.Keys)
+                                    key.Time += StartOffset;
                                 break;
                         }
                     }
@@ -290,7 +306,7 @@ namespace ClipInput
 
             Console.WriteLine("Building the final GBX file...");
 
-            return new GameBox<CGameCtnMediaClip>(clip);
+            return clip;
         }
 
         private void ProcessDigitalInput(IEnumerable<ControlEntry> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks,
@@ -389,10 +405,10 @@ namespace ClipInput
 
                                 if (AdjustToFPS)
                                 {
-                                    var blockLength = time.TotalSeconds - prevTime;
+                                    var blockLength = time - prevTime;
 
-                                    if (blockLength < 1 / FPS)
-                                        time = TimeSpan.FromSeconds(prevTime + 1 / FPS);
+                                    if (blockLength < TimeSpan.FromSeconds(1 / FPS))
+                                        time = prevTime + TimeSpan.FromSeconds(1 / FPS);
                                 }
 
                                 currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(time, key.Position);
@@ -488,7 +504,7 @@ namespace ClipInput
             {
                 var key = new CGameCtnMediaBlockTriangles.Key(triangles)
                 {
-                    Time = (float)time.TotalSeconds,
+                    Time = time,
                     Positions = triangles.Keys[0].Positions
                 };
 
@@ -598,7 +614,7 @@ namespace ClipInput
 
             var key = new CGameCtnMediaBlockTriangles.Key(trianglePad)
             {
-                Time = (float)time.TotalSeconds,
+                Time = time,
                 Positions = new Vec3[]
                 {
                     pos1Start,
@@ -658,10 +674,10 @@ namespace ClipInput
 
                         if (AdjustToFPS)
                         {
-                            var blockLength = time.TotalSeconds - prevTime;
+                            var blockLength = time - prevTime;
 
-                            if (blockLength < 1 / FPS)
-                                time = TimeSpan.FromSeconds(prevTime + 1 / FPS);
+                            if (blockLength < TimeSpan.FromSeconds(1 / FPS))
+                                time = prevTime + TimeSpan.FromSeconds(1 / FPS);
                         }
 
                         imageBase.Effect.Keys[1] = CreateSimiKey(time, position, (2, 2));
@@ -733,7 +749,7 @@ namespace ClipInput
 
             var key = new CGameCtnMediaBlockTriangles.Key(trianglePad)
             {
-                Time = (float)time.TotalSeconds,
+                Time = time,
                 Positions = new Vec3[]
                 {
                     pos1Start,
@@ -760,7 +776,6 @@ namespace ClipInput
             };
 
             var chunk001 = track.CreateChunk<CGameCtnMediaTrack.Chunk03078001>();
-            chunk001.U01 = 10;
 
             switch (GameVersion)
             {
@@ -821,14 +836,13 @@ namespace ClipInput
         {
             return new CControlEffectSimi.Key
             {
-                Time = (float)time.TotalSeconds,
+                Time = time,
                 ScaleX = scale.X * Scale.X / (AspectRatio.X / AspectRatio.Y),
                 ScaleY = scale.Y * Scale.Y,
                 Opacity = 1,
                 Depth = depth,
                 X = position.X * Space.X * Scale.X + Position.X,
-                Y = position.Y * Space.Y * Scale.Y + Position.Y,
-                Unknown = new float[] { 0, 0, 0 }
+                Y = position.Y * Space.Y * Scale.Y + Position.Y
             };
         }
 

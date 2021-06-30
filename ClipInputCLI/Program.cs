@@ -562,9 +562,9 @@ namespace ClipInputCLI
                 Console.WriteLine();
                 Console.WriteLine($"Loading {Path.GetFileName(fileName)}...");
 
-                var gbx = GameBox.Parse(fileName);
+                var node = GameBox.ParseNode(fileName);
 
-                var tool = new ClipInputTool(gbx);
+                var tool = new ClipInputTool(node);
 
                 Console.WriteLine($"Fetching the configuration...");
 
