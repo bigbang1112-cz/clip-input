@@ -501,16 +501,11 @@ namespace ClipInput
             var accelPadQuad = default(CGameCtnMediaBlockTriangles);
             var brakePadQuad = default(CGameCtnMediaBlockTriangles);
 
-            var lastEntry = entries.Last();
+            var lastAccelerateEntry = entries.Last(x => x.Name == "Gas" || x.Name == "AccelerateReal" || x.Name == "Accelerate");
+            var lastBrakeEntry = entries.Last(x => x.Name == "Gas" || x.Name == "BrakeReal" || x.Name == "Brake");
 
             foreach (var entry in entries)
             {
-                if (entry.Equals(lastEntry))
-                {
-                    CompleteTheTriangle(accelPadQuad, eventsDuration);
-                    CompleteTheTriangle(brakePadQuad, eventsDuration);
-                }
-
                 if (entry.Name == "Gas" || entry.Name == "AccelerateReal")
                 {
                     CompleteTheTriangle(accelPadQuad, entry.Time);
@@ -519,6 +514,11 @@ namespace ClipInput
                     {
                         accelPadQuad = CreateKeyPadMoment(accelKey, entry.Value.Value, entry.Time);
                         trackAccelPad.Blocks.Add(accelPadQuad);
+
+                        if (entry.Equals(lastAccelerateEntry))
+                        {
+                            CompleteTheTriangle(accelPadQuad, eventsDuration);
+                        }
                     }
                     else
                     {
@@ -534,11 +534,28 @@ namespace ClipInput
                     {
                         brakePadQuad = CreateKeyPadMoment(brakeKey, entry.Value.Value, entry.Time);
                         trackBrakePad.Blocks.Add(brakePadQuad);
+
+                        if (entry.Equals(lastBrakeEntry))
+                        {
+                            CompleteTheTriangle(brakePadQuad, eventsDuration);
+                        }
                     }
                     else
                     {
                         brakePadQuad = null;
                     }
+                }
+
+                if (entry.Name == "Accelerate")
+                {
+                    CompleteTheTriangle(accelPadQuad, entry.Time);
+                    accelPadQuad = null;
+                }
+
+                if (entry.Name == "Brake")
+                {
+                    CompleteTheTriangle(brakePadQuad, entry.Time);
+                    brakePadQuad = null;
                 }
             }
         }
@@ -574,7 +591,7 @@ namespace ClipInput
             var padQuad = default(CGameCtnMediaBlockTriangles);
 
             var inverse = -1;
-            var lastEntry = entries.Last();
+            var lastEntry = entries.Last(x => x.Name == "Steer" || x.Name == "Steer (analog)");
 
             foreach (var entry in entries)
             {
