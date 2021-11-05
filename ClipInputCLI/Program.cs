@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using GBX.NET.Engines.Game;
 
 namespace ClipInputCLI
 {
@@ -560,11 +561,8 @@ namespace ClipInputCLI
                 }
 
                 Console.WriteLine();
-                Console.WriteLine($"Loading {Path.GetFileName(fileName)}...");
 
-                var node = GameBox.ParseNode(fileName);
-
-                var tool = new ClipInputTool(node);
+                var tool = new ClipInputTool();
 
                 Console.WriteLine($"Fetching the configuration...");
 
@@ -624,7 +622,15 @@ namespace ClipInputCLI
 
                 try
                 {
-                    var output = tool.Process();
+                    Console.WriteLine($"Loading {Path.GetFileName(fileName)}...");
+
+                    var node = GameBox.ParseNode(fileName);
+
+                    CGameCtnMediaClip output;
+                    if (node is null && Path.GetExtension(fileName) == ".txt")
+                        output = tool.Process(File.ReadAllText(fileName));
+                    else
+                        output = tool.Process(node);
 
                     Console.WriteLine();
                     Console.WriteLine("Process has finished.");
