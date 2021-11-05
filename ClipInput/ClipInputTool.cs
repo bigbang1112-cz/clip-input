@@ -583,11 +583,6 @@ namespace ClipInput
                     inverse = 1;
                 }
 
-                if (entry.Equals(lastEntry))
-                {
-                    CompleteTheTriangle(padQuad, eventsDuration);
-                }
-
                 switch (entry.Name)
                 {
                     case "Steer":
@@ -599,6 +594,12 @@ namespace ClipInput
                             {
                                 padQuad = CreatePadMoment(entry.Value.Value * inverse, entry.Time);
                                 trackPad.Blocks.Add(padQuad);
+
+                                if (entry.Equals(lastEntry))
+                                {
+                                    CompleteTheTriangle(padQuad, eventsDuration);
+                                    continue;
+                                }
                             }
                             else
                             {
