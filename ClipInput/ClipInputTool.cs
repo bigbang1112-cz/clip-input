@@ -7,10 +7,12 @@ using GBX.NET;
 using GBX.NET.Engines.Game;
 using GBX.NET.Engines.Control;
 using GBX.NET.IO;
+using GBX.NET.Engines.MwFoundations;
+using System.Globalization;
 
 namespace ClipInput
 {
-    public class ClipInputTool : GameBoxIO<CGameCtnMediaClip>
+    public class ClipInputTool
     {
         public Game GameVersion { get; private set; }
 
@@ -31,7 +33,7 @@ namespace ClipInput
         public bool AdjustToFPS { get; set; }
         public float FPS { get; set; } = 30;
 
-        public ClipInputTool(GameBox gbx) : base(gbx)
+        public ClipInputTool()
         {
             AspectRatio = (16, 9);
             Scale = (0.5f, 0.5f);
@@ -89,9 +91,12 @@ namespace ClipInput
         /// </summary>
         /// <exception cref="TMTurboNotSupportedException"/>
         /// <returns>Output result.</returns>
-        public override GameBox<CGameCtnMediaClip> Process()
+        public CGameCtnMediaClip Process(CMwNod node)
         {
-            if (InputGBX.TryNode(out CGameCtnReplayRecord replay))
+            if (node is null)
+                throw new ArgumentNullException(nameof(node));
+
+            if (node is CGameCtnReplayRecord replay)
             {
                 Console.WriteLine("CGameCtnReplayRecord (Replay.Gbx) detected...");
 
@@ -115,17 +120,17 @@ namespace ClipInput
 
                 GameVersion = Game.TMUF;
 
-                return ProcessControlEntries(replay.ControlEntries, TimeSpan.FromMilliseconds(replay.EventsDuration));
+                return ProcessControlEntries(replay.ControlEntries.Select(x => new ControlEntryWrap(x)), TimeSpan.FromMilliseconds(replay.EventsDuration));
             }
 
-            if (InputGBX.TryNode(out CGameCtnGhost ghost))
+            if (node is CGameCtnGhost ghost)
             {
                 Console.WriteLine("CGameCtnGhost (Ghost.Gbx) detected...");
 
                 return ProcessGhost(ghost);
             }
 
-            if (InputGBX.TryNode(out CGameCtnMediaClip clip))
+            if (node is CGameCtnMediaClip clip)
             {
                 Console.WriteLine("CGameCtnMediaClip (Clip.Gbx) detected...");
 
@@ -137,7 +142,63 @@ namespace ClipInput
             throw new Exception();
         }
 
-        private GameBox<CGameCtnMediaClip> ProcessGhost(CGameCtnGhost ghost)
+        public CGameCtnMediaClip Process(string content)
+        {
+            var entries = new List<ControlEntryWrap>();
+
+            using var r = new StringReader(content);
+
+            string line;
+            while ((line = r.ReadLine()) != null)
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                var split = line.Split(' ');
+
+                var time = TimeSpan.FromMilliseconds(int.Parse(split[0]));
+                var name = split[1];
+                var value = float.Parse(split[2], NumberStyles.Any, CultureInfo.InvariantCulture);
+
+                var entry = new ControlEntryWrap
+                {
+                    Name = name,
+                    Time = time
+                };
+
+                switch (name)
+                {
+                    case "AccelerateReal":
+                        entry.Value = value;
+                        break;
+                    case "BrakeReal":
+                        entry.Value = value;
+                        break;
+                    case "Steer":
+                        entry.Value = -value; // Fix, official is right=1, left=-1
+                        break;
+                }
+
+                entries.Add(entry);
+            }
+
+            return Process(entries);
+        }
+
+        public CGameCtnMediaClip Process(IEnumerable<ControlEntryWrap> entries)
+        {
+            return ProcessControlEntries(entries, entries.Last().Time);
+        }
+
+        private static IEnumerable<CGameCtnGhost> ExtractGhosts(CGameCtnMediaClip clip)
+        {
+            foreach (var track in clip.Tracks)
+                foreach (var block in track.Blocks)
+                    if (block is CGameCtnMediaBlockGhost ghostBlock)
+                        yield return ghostBlock.GhostModel;
+        }
+
+        private CGameCtnMediaClip ProcessGhost(CGameCtnGhost ghost)
         {
             if (ghost == null)
                 throw new ArgumentNullException(nameof(ghost));
@@ -168,10 +229,10 @@ namespace ClipInput
                 GameVersion = Game.TMUF;
             }
 
-            return ProcessControlEntries(ghost.ControlEntries, TimeSpan.FromMilliseconds(ghost.EventsDuration));
+            return ProcessControlEntries(ghost.ControlEntries.Select(x => new ControlEntryWrap(x)), TimeSpan.FromMilliseconds(ghost.EventsDuration));
         }
 
-        private GameBox<CGameCtnMediaClip> ProcessControlEntries(IEnumerable<ControlEntry> entries, TimeSpan eventsDuration)
+        private CGameCtnMediaClip ProcessControlEntries(IEnumerable<ControlEntryWrap> entries, TimeSpan eventsDuration)
         {
             if (entries == null)
                 throw new NoInputsException();
@@ -194,6 +255,7 @@ namespace ClipInput
                     clip.CreateChunk<CGameCtnMediaClip.Chunk03079007>();
                     break;
                 case Game.ManiaPlanet:
+                case Game.Unknown: // for TXT
                     Console.WriteLine("Creating CGameCtnMediaClip chunk 0x00D...");
                     clip.CreateChunk<CGameCtnMediaClip.Chunk0307900D>();
                     break;
@@ -221,11 +283,11 @@ namespace ClipInput
                         hasBrakeReal = true;
                         break;
                     case "AccelerateReal":
-                        if ((entry as ControlEntryAnalog).Value >= 0)
+                        if (entry.Value >= 0)
                             hasAccelReal = true;
                         break;
                     case "BrakeReal":
-                        if ((entry as ControlEntryAnalog).Value >= 0)
+                        if (entry.Value >= 0)
                             hasBrakeReal = true;
                         break;
                     case "Steer (analog)":
@@ -275,13 +337,16 @@ namespace ClipInput
                         switch (block)
                         {
                             case CGameCtnMediaBlockImage blockImage:
-                                blockImage.Effect.Keys.ForEach(x => x.Time += (float)StartOffset.TotalSeconds);
+                                foreach (var key in blockImage.Effect.Keys)
+                                    key.Time += StartOffset;
                                 break;
                             case CGameCtnMediaBlockTriangles blockTriangles:
-                                blockTriangles.Keys.ForEach(x => x.Time += (float)StartOffset.TotalSeconds);
+                                foreach (var key in blockTriangles.Keys)
+                                    key.Time += StartOffset;
                                 break;
                             case CGameCtnMediaBlockText blockText:
-                                blockText.Effect.Keys.ForEach(x => x.Time += (float)StartOffset.TotalSeconds);
+                                foreach (var key in blockText.Effect.Keys)
+                                    key.Time += StartOffset;
                                 break;
                         }
                     }
@@ -290,10 +355,10 @@ namespace ClipInput
 
             Console.WriteLine("Building the final GBX file...");
 
-            return new GameBox<CGameCtnMediaClip>(clip);
+            return clip;
         }
 
-        private void ProcessDigitalInput(IEnumerable<ControlEntry> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks,
+        private void ProcessDigitalInput(IEnumerable<ControlEntryWrap> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks,
             bool onlyAcceleration, bool usesAnalogAccel, bool usesAnalogBrake)
         {
             var trackDictionary = new Dictionary<KeyboardKey, CGameCtnMediaTrack>();
@@ -364,7 +429,7 @@ namespace ClipInput
                     {
                         if (key.EntryNames.Contains(entry.Name))
                         {
-                            if (entry.IsEnabled)
+                            if (entry.IsEnabled == true)
                             {
                                 if (!pressedKeyDictionary[key])
                                 {
@@ -389,10 +454,10 @@ namespace ClipInput
 
                                 if (AdjustToFPS)
                                 {
-                                    var blockLength = time.TotalSeconds - prevTime;
+                                    var blockLength = time - prevTime;
 
-                                    if (blockLength < 1 / FPS)
-                                        time = TimeSpan.FromSeconds(prevTime + 1 / FPS);
+                                    if (blockLength < TimeSpan.FromSeconds(1 / FPS))
+                                        time = prevTime + TimeSpan.FromSeconds(1 / FPS);
                                 }
 
                                 currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(time, key.Position);
@@ -419,7 +484,7 @@ namespace ClipInput
             }
         }
 
-        private void ProcessAnalogAccel(IEnumerable<ControlEntry> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks, KeyboardKey accelKey, KeyboardKey brakeKey)
+        private void ProcessAnalogAccel(IEnumerable<ControlEntryWrap> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks, KeyboardKey accelKey, KeyboardKey brakeKey)
         {
             // Defines the start of the first event
             var eventStartTime = new TimeSpan();
@@ -436,26 +501,24 @@ namespace ClipInput
             var accelPadQuad = default(CGameCtnMediaBlockTriangles);
             var brakePadQuad = default(CGameCtnMediaBlockTriangles);
 
-            var lastEntry = entries.Last();
+            var lastAccelerateEntry = entries.Last(x => x.Name == "Gas" || x.Name == "AccelerateReal" || x.Name == "Accelerate");
+            var lastBrakeEntry = entries.Last(x => x.Name == "Gas" || x.Name == "BrakeReal" || x.Name == "Brake");
 
             foreach (var entry in entries)
             {
-                if (entry.Equals(lastEntry))
-                {
-                    CompleteTheTriangle(accelPadQuad, eventsDuration);
-                    CompleteTheTriangle(brakePadQuad, eventsDuration);
-                }
-
                 if (entry.Name == "Gas" || entry.Name == "AccelerateReal")
                 {
-                    var analog = (ControlEntryAnalog)entry;
-
                     CompleteTheTriangle(accelPadQuad, entry.Time);
 
-                    if (analog.Value > 0)
+                    if (entry.Value > 0)
                     {
-                        accelPadQuad = CreateKeyPadMoment(accelKey, analog.Value, entry.Time);
+                        accelPadQuad = CreateKeyPadMoment(accelKey, entry.Value.Value, entry.Time);
                         trackAccelPad.Blocks.Add(accelPadQuad);
+
+                        if (entry.Equals(lastAccelerateEntry))
+                        {
+                            CompleteTheTriangle(accelPadQuad, eventsDuration);
+                        }
                     }
                     else
                     {
@@ -465,19 +528,34 @@ namespace ClipInput
 
                 if (entry.Name == "Gas" || entry.Name == "BrakeReal")
                 {
-                    var analog = (ControlEntryAnalog)entry;
-
                     CompleteTheTriangle(brakePadQuad, entry.Time);
 
-                    if ((analog.Value > 0 && entry.Name != "Gas") || (entry.Name == "Gas" && analog.Value < 0))
+                    if ((entry.Value > 0 && entry.Name != "Gas") || (entry.Name == "Gas" && entry.Value < 0))
                     {
-                        brakePadQuad = CreateKeyPadMoment(brakeKey, analog.Value, entry.Time);
+                        brakePadQuad = CreateKeyPadMoment(brakeKey, entry.Value.Value, entry.Time);
                         trackBrakePad.Blocks.Add(brakePadQuad);
+
+                        if (entry.Equals(lastBrakeEntry))
+                        {
+                            CompleteTheTriangle(brakePadQuad, eventsDuration);
+                        }
                     }
                     else
                     {
                         brakePadQuad = null;
                     }
+                }
+
+                if (entry.Name == "Accelerate")
+                {
+                    CompleteTheTriangle(accelPadQuad, entry.Time);
+                    accelPadQuad = null;
+                }
+
+                if (entry.Name == "Brake")
+                {
+                    CompleteTheTriangle(brakePadQuad, entry.Time);
+                    brakePadQuad = null;
                 }
             }
         }
@@ -488,7 +566,7 @@ namespace ClipInput
             {
                 var key = new CGameCtnMediaBlockTriangles.Key(triangles)
                 {
-                    Time = (float)time.TotalSeconds,
+                    Time = time,
                     Positions = triangles.Keys[0].Positions
                 };
 
@@ -496,7 +574,7 @@ namespace ClipInput
             }
         }
 
-        private void ProcessAnalogSteering(IEnumerable<ControlEntry> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks)
+        private void ProcessAnalogSteering(IEnumerable<ControlEntryWrap> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks)
         {
             // Defines the start of the first event
             var eventStartTime = new TimeSpan();
@@ -513,18 +591,13 @@ namespace ClipInput
             var padQuad = default(CGameCtnMediaBlockTriangles);
 
             var inverse = -1;
-            var lastEntry = entries.Last();
+            var lastEntry = entries.Last(x => x.Name == "Steer" || x.Name == "Steer (analog)");
 
             foreach (var entry in entries)
             {
-                if (entry.Name == "_FakeDontInverseAxis" && entry.IsEnabled)
+                if (entry.Name == "_FakeDontInverseAxis" && entry.IsEnabled == true)
                 {
                     inverse = 1;
-                }
-
-                if (entry.Equals(lastEntry))
-                {
-                    CompleteTheTriangle(padQuad, eventsDuration);
                 }
 
                 switch (entry.Name)
@@ -532,14 +605,18 @@ namespace ClipInput
                     case "Steer":
                     case "Steer (analog)":
                         {
-                            var analog = (ControlEntryAnalog)entry;
-
                             CompleteTheTriangle(padQuad, entry.Time);
 
-                            if (analog.Value > 0 || analog.Value < 0)
+                            if (entry.Value > 0 || entry.Value < 0)
                             {
-                                padQuad = CreatePadMoment(analog.Value * inverse, entry.Time);
+                                padQuad = CreatePadMoment(entry.Value.Value * inverse, entry.Time);
                                 trackPad.Blocks.Add(padQuad);
+
+                                if (entry.Equals(lastEntry))
+                                {
+                                    CompleteTheTriangle(padQuad, eventsDuration);
+                                    continue;
+                                }
                             }
                             else
                             {
@@ -598,7 +675,7 @@ namespace ClipInput
 
             var key = new CGameCtnMediaBlockTriangles.Key(trianglePad)
             {
-                Time = (float)time.TotalSeconds,
+                Time = time,
                 Positions = new Vec3[]
                 {
                     pos1Start,
@@ -614,7 +691,7 @@ namespace ClipInput
         }
 
         private void CreatePad(Side side, string image, string imageOn, TimeSpan eventStartTime, TimeSpan eventsDuration,
-            IList<CGameCtnMediaTrack> tracks, IEnumerable<ControlEntry> entries)
+            IList<CGameCtnMediaTrack> tracks, IEnumerable<ControlEntryWrap> entries)
         {
             var trackBase = CreateMediaTrack($"Pad {side} Base");
             tracks.Add(trackBase);
@@ -633,7 +710,7 @@ namespace ClipInput
                 if ((side == Side.Left && entry.Name == "SteerLeft")
                   || side == Side.Right && entry.Name == "SteerRight")
                 {
-                    if (entry.IsEnabled)
+                    if (entry.IsEnabled == true)
                     {
                         if (!isPressed)
                         {
@@ -658,10 +735,10 @@ namespace ClipInput
 
                         if (AdjustToFPS)
                         {
-                            var blockLength = time.TotalSeconds - prevTime;
+                            var blockLength = time - prevTime;
 
-                            if (blockLength < 1 / FPS)
-                                time = TimeSpan.FromSeconds(prevTime + 1 / FPS);
+                            if (blockLength < TimeSpan.FromSeconds(1 / FPS))
+                                time = prevTime + TimeSpan.FromSeconds(1 / FPS);
                         }
 
                         imageBase.Effect.Keys[1] = CreateSimiKey(time, position, (2, 2));
@@ -733,7 +810,7 @@ namespace ClipInput
 
             var key = new CGameCtnMediaBlockTriangles.Key(trianglePad)
             {
-                Time = (float)time.TotalSeconds,
+                Time = time,
                 Positions = new Vec3[]
                 {
                     pos1Start,
@@ -760,7 +837,6 @@ namespace ClipInput
             };
 
             var chunk001 = track.CreateChunk<CGameCtnMediaTrack.Chunk03078001>();
-            chunk001.U01 = 10;
 
             switch (GameVersion)
             {
@@ -769,6 +845,7 @@ namespace ClipInput
                     chunk001.U02 = 2;
                     break;
                 case Game.ManiaPlanet:
+                case Game.Unknown: // for TXT
                     track.CreateChunk<CGameCtnMediaTrack.Chunk03078005>();
                     chunk001.U02 = -1;
                     break;
@@ -788,6 +865,7 @@ namespace ClipInput
                     new Uri("https://bigbang1112.eu/projects/clipinput/" + image));
                     break;
                 case Game.ManiaPlanet:
+                case Game.Unknown: // for TXT
                     blockImage.Image = new FileRef(3, FileRef.DefaultChecksum, Path.Combine(@"Media\Images\Inputs", Path.GetFileName(image)),
                     new Uri("https://bigbang1112.eu/projects/clipinput/" + image));
                     break;
@@ -821,14 +899,13 @@ namespace ClipInput
         {
             return new CControlEffectSimi.Key
             {
-                Time = (float)time.TotalSeconds,
+                Time = time,
                 ScaleX = scale.X * Scale.X / (AspectRatio.X / AspectRatio.Y),
                 ScaleY = scale.Y * Scale.Y,
                 Opacity = 1,
                 Depth = depth,
                 X = position.X * Space.X * Scale.X + Position.X,
-                Y = position.Y * Space.Y * Scale.Y + Position.Y,
-                Unknown = new float[] { 0, 0, 0 }
+                Y = position.Y * Space.Y * Scale.Y + Position.Y
             };
         }
 

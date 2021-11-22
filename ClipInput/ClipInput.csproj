@@ -5,13 +5,13 @@
 		<AssemblyTitle>Clip Input</AssemblyTitle>
 		<Authors>Petr 'BigBang1112' Pivoňka</Authors>
 		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
-		<Version>1.1.1</Version>
+		<Version>1.2.0-rc</Version>
 
 		<TargetFramework>net5.0</TargetFramework>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="GBX.NET" Version="0.10.2" />
+	  <PackageReference Include="GBX.NET" Version="0.11.0" />
 	  <PackageReference Include="GBX.NET.LZO" Version="1.0.0" />
 	</ItemGroup>
 
