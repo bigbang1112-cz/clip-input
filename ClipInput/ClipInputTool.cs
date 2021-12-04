@@ -229,7 +229,7 @@ namespace ClipInput
                 GameVersion = Game.TMUF;
             }
 
-            return ProcessControlEntries(ghost.ControlEntries.Select(x => new ControlEntryWrap(x)), TimeSpan.FromMilliseconds(ghost.EventsDuration));
+            return ProcessControlEntries(ghost.ControlEntries?.Select(x => new ControlEntryWrap(x)), TimeSpan.FromMilliseconds(ghost.EventsDuration));
         }
 
         private CGameCtnMediaClip ProcessControlEntries(IEnumerable<ControlEntryWrap> entries, TimeSpan eventsDuration)
