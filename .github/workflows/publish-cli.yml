@@ -1,7 +1,8 @@
 name: Publish CLI
 
 on:
-  workflow_dispatch:
+  release:
+    types: [ published ]
 
 jobs:
   build:
@@ -29,9 +30,47 @@ jobs:
       run: dotnet restore
       
     - name: Publish ${{ matrix.os.runtime }}
-      run: dotnet publish ClipInputCLI -c Release -f net7.0 -r ${{ matrix.os.runtime }} -o build/ClipInputCLI -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:PublishTrimmed=true --self-contained
+      run: dotnet publish ClipInputCLI -c Release -f net7.0 -r ${{ matrix.os.runtime }} -o build/ClipInputCLI-${{ matrix.os.runtime }} -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:PublishTrimmed=true --self-contained
     
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.1.0
       with:
         path: build
+        
+  publish:
+    needs: build
+
+    strategy:
+      matrix:
+        os: [ { os: windows-latest, runtime: win-x64 }, { os: ubuntu-latest, runtime: linux-x64 } ]
+
+    runs-on: ${{ matrix.os.os }}
+    
+    steps:
+    - name: Download a Build Artifact
+      uses: actions/download-artifact@v3.0.0
+      with:
+        name: build
+        
+    - name: Zip to ClipInputCLI-${{ matrix.os.runtime }}.${{ github.ref_name }}.zip
+      uses: thedoctor0/zip-release@main
+      with:
+        path: ClipInputCLI-${{ matrix.os.runtime }}
+        filename: ClipInputCLI-${{ matrix.os.runtime }}.${{ github.ref_name }}.zip
+    
+    - name: SHA256 checksum
+      uses: Huy-Ngo/gha-sha@v1.1.0
+      with:
+        glob: ClipInputCLI-${{ matrix.os.runtime }}.${{ github.ref_name }}.zip
+    
+    - name: Upload ClipInputCLI-${{ matrix.os.runtime }}.${{ github.ref_name }}.zip to latest release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ClipInputCLI-${{ matrix.os.runtime }}.${{ github.ref_name }}.zip
+        tag: ${{ github.ref }}
+        overwrite: true
+        body: |
+          ${{ github.event.release.body }}
+          
+          The ZIP was automatically generated using the [publish workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).
