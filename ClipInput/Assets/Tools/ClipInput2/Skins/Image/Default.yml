@@ -1,0 +1,5 @@
+Name: Default
+DisplayName: Default
+
+AnalogAccelOffset: [0, 0.01]
+AnalogBrakeOffset: [0, 0.01]

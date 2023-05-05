@@ -1,0 +1,3 @@
+[submodule "GbxToolAPI"]
+	path = GbxToolAPI
+	url = https://github.com/bigbang1112-cz/gbx-tool-api

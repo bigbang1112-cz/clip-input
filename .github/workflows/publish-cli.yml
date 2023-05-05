@@ -1,0 +1,37 @@
+name: Publish CLI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        os: [ { os: windows-latest, runtime: win-x64 }, { os: ubuntu-latest, runtime: linux-x64 } ]
+
+    runs-on: ${{ matrix.os.os }}
+    
+    name: Publish on ${{ matrix.os.os }}
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT }}
+        submodules: recursive
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Publish ${{ matrix.os.runtime }}
+      run: dotnet publish ClipInputCLI -c Release -f net7.0 -r ${{ matrix.os.runtime }} -o build/ClipInputCLI -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:PublishTrimmed=true --self-contained
+    
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        path: build

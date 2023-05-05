@@ -1,917 +1,259 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-
-using GBX.NET;
+﻿using ClipInput.Builders;
+using ClipInput.Skins;
 using GBX.NET.Engines.Game;
-using GBX.NET.Engines.Control;
-using GBX.NET.IO;
-using GBX.NET.Engines.MwFoundations;
-using System.Globalization;
+using GbxToolAPI;
+using TmEssentials;
 
-namespace ClipInput
+namespace ClipInput;
+
+[ToolName("Clip Input 2")]
+[ToolDescription("Transfers input data available inside a replay or ghost into a MediaTracker clip.")]
+[ToolGitHub("bigbang1112-cz/clip-input")]
+[ToolAssets("ClipInput2")]
+[ToolAssetsIgnoreIngame("Skins")]
+public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHasAssets, IConfigurable<ClipInputConfig>
 {
-    public class ClipInputTool
+    private readonly CGameCtnReplayRecord? replay;
+    private readonly IReadOnlyCollection<Ghost> ghosts;
+    private readonly TimeInt32 endTime;
+
+    public ClipInputConfig Config { get; set; } = new();
+
+    public ClipInputTool(CGameCtnReplayRecord replay)
     {
-        public Game GameVersion { get; private set; }
+        this.replay = replay;
+        (ghosts, endTime) = GetGhostsAndEndTime(replay.GetGhosts(), replay);
+    }
 
-        public Vec2 AspectRatio { get; set; } = (16, 9);
-        public Vec2 Scale { get; set; } = (1, 1);
-        public Vec2 Space { get; set; } = (1, 1);
-        public Vec2 Position { get; set; } = (0, 0);
-        public bool ShowAfterInteraction { get; set; }
-        public bool CutoffOutside { get; set; } // WIP
-        public Vec2 PadOffset { get; set; }
-        public Vec4 PadColor { get; set; } = (1, 1, 1, 1);
-        public Vec4 PadBrakeColor { get; set; } = (1, 0, 0, 1);
-        public Vec3 PadStartPosition { get; set; }
-        public Vec3 PadEndPosition { get; set; }
-        public Theme Theme { get; set; }
-        public TimeSpan StartOffset { get; set; }
-        public KeyboardKey[] Keys { get; set; }
-        public bool AdjustToFPS { get; set; }
-        public float FPS { get; set; } = 30;
+    public ClipInputTool(CGameCtnGhost ghost) : this(Enumerable.Repeat(ghost, 1))
+    {
 
-        public ClipInputTool()
+    }
+
+    public ClipInputTool(IEnumerable<CGameCtnGhost> ghosts)
+    {
+        (this.ghosts, endTime) = GetGhostsAndEndTime(ghosts);
+    }
+
+    public ClipInputTool(CGameCtnMediaClip clip) : this(clip.Tracks.SelectMany(x => x.Blocks).OfType<CGameCtnMediaBlockGhost>().Select(x => x.GhostModel))
+    {
+        
+    }
+
+    public ClipInputTool(TextFile txtFile)
+    {
+        var inputs = DonadigoInputFile.Parse(txtFile.Text)
+            .OrderBy(x => x.Time)
+            .ToList();
+        
+        ghosts = new List<Ghost> { new(inputs) };
+        endTime = inputs.LastOrDefault()?.Time ?? TimeInt32.Zero;
+    }
+
+    public async ValueTask LoadAssetsAsync()
+    {
+        var usedSkinId = string.IsNullOrWhiteSpace(Config.SkinId) ? "Default" : Config.SkinId;
+
+        Config.Skin = Config.DesignId.ToLowerInvariant() switch
         {
-            AspectRatio = (16, 9);
-            Scale = (0.5f, 0.5f);
-            Space = (1.05f, 1.05f);
-            Position = (0, 0.5f);
-            ShowAfterInteraction = false;
-            PadOffset = (0.385f, 0);
-            PadColor = (0.11f, 0.44f, 0.69f, 1);
-            PadBrakeColor = (0.69f, 0.18f, 0.11f, 1);
-            PadStartPosition = (0.16f, -0.45f, 0);
-            PadEndPosition = (0.6f, 0, 0);
-            Theme = Theme.Black;
+            "basic" => await AssetsManager<ClipInputTool>.GetFromYmlAsync<BasicDesignSkin>(Path.Combine("Skins", "Basic", usedSkinId + ".yml")),
+            "compact" => await AssetsManager<ClipInputTool>.GetFromYmlAsync<BasicDesignSkin>(Path.Combine("Skins", "Basic", usedSkinId + ".yml")),
+            "image" => await AssetsManager<ClipInputTool>.GetFromYmlAsync<ImageDesignSkin>(Path.Combine("Skins", "Image", usedSkinId + ".yml")),
+            "text" => null,
+            _ => throw new NotImplementedException($"{Config.DesignId} is not a valid design ID to be used with skins.")
+        };
+    }
 
-            Keys = new KeyboardKey[]
-            {
-                new KeyboardKey()
-                {
-                    EntryName = "Accelerate",
-                    TrackName = "Key Up",
-                    Position = (0, 0.25f),
-                    ImageOff = "{0}_Up.png",
-                    ImageOn = "{0}_Up_On.png"
-                },
-                new KeyboardKey()
-                {
-                    EntryName = "Brake",
-                    TrackName = "Key Down",
-                    Position = (0, -0.25f),
-                    ImageOff = "{0}_Down.png",
-                    ImageOn = "{0}_Down_On.png"
-                },
-                new KeyboardKey()
-                {
-                    EntryNames = new string[] { "SteerLeft", "Steer left" },
-                    TrackName = "Key Left",
-                    Position = (0.28f, -0.25f),
-                    ImageOff = "{0}_Left.png",
-                    ImageOn = "{0}_Left_On.png",
-                    IsSteerInput = true
-                },
-                new KeyboardKey()
-                {
-                    EntryNames = new string[] { "SteerRight", "Steer right" },
-                    TrackName = "Key Right",
-                    Position = (-0.28f, -0.25f),
-                    ImageOff = "{0}_Right.png",
-                    ImageOn = "{0}_Right_On.png",
-                    IsSteerInput = true
-                }
-            };
+    public static string RemapAssetRoute(string route, bool isManiaPlanet)
+    {
+        if (route.StartsWith("Images"))
+        {
+            return Path.Combine("Media" + (isManiaPlanet ? "" : "Tracker"), "Images", "ClipInput2", route[("Images".Length + 1)..]);
         }
 
-        /// <summary>
-        /// Processes the program.
-        /// </summary>
-        /// <exception cref="TMTurboNotSupportedException"/>
-        /// <returns>Output result.</returns>
-        public CGameCtnMediaClip Process(CMwNod node)
+        return "";
+    }
+
+    private static (IReadOnlyCollection<Ghost>, TimeInt32 endTime) GetGhostsAndEndTime(IEnumerable<CGameCtnGhost> ghosts, CGameCtnReplayRecord? replay = null)
+    {
+        var ghostWraps = new List<Ghost>();
+
+        var longestTime = default(TimeInt32?);
+
+        foreach (var ghost in ghosts)
         {
-            if (node is null)
-                throw new ArgumentNullException(nameof(node));
+            var time = GetEndTime(ghost);
 
-            if (node is CGameCtnReplayRecord replay)
+            if (longestTime is null || time > longestTime)
             {
-                Console.WriteLine("CGameCtnReplayRecord (Replay.Gbx) detected...");
-
-                if (replay.ControlEntries is null)
-                {
-                    Console.WriteLine("Control entries not found in the root node...");
-
-                    if (replay.Ghosts is not null && replay.Ghosts.Length > 0)
-                    {
-                        Console.WriteLine("Ghost found...");
-
-                        return ProcessGhost(replay.Ghosts.FirstOrDefault());
-                    }
-
-                    Console.WriteLine("Checking ghosts in Clip...");
-
-                    var ghosts = ExtractGhosts(replay.Clip);
-
-                    return ProcessGhost(ghosts.FirstOrDefault());
-                }
-
-                GameVersion = Game.TMUF;
-
-                return ProcessControlEntries(replay.ControlEntries.Select(x => new ControlEntryWrap(x)), TimeSpan.FromMilliseconds(replay.EventsDuration));
+                longestTime = time;
             }
 
-            if (node is CGameCtnGhost ghost)
+            if (ghost.PlayerInputs?.Length > 1)
             {
-                Console.WriteLine("CGameCtnGhost (Ghost.Gbx) detected...");
-
-                return ProcessGhost(ghost);
+                // note
             }
 
-            if (node is CGameCtnMediaClip clip)
+            var inputs = ghost.PlayerInputs?.FirstOrDefault()?.Inputs ?? ghost.Inputs ?? replay?.Inputs;
+
+            if (inputs is null || inputs.Count == 0)
             {
-                Console.WriteLine("CGameCtnMediaClip (Clip.Gbx) detected...");
-
-                var ghosts = ExtractGhosts(clip);
-
-                return ProcessGhost(ghosts.FirstOrDefault());
+                continue;
             }
 
-            throw new Exception();
+            longestTime ??= inputs.Last().Time + TimeInt32.FromSeconds(1);
+
+            ghostWraps.Add(new(inputs, ghost));
         }
 
-        public CGameCtnMediaClip Process(string content)
+        if (longestTime is null)
         {
-            var entries = new List<ControlEntryWrap>();
-
-            using var r = new StringReader(content);
-
-            string line;
-            while ((line = r.ReadLine()) != null)
-            {
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
-
-                var split = line.Split(' ');
-
-                var time = TimeSpan.FromMilliseconds(int.Parse(split[0]));
-                var name = split[1];
-                var value = float.Parse(split[2], NumberStyles.Any, CultureInfo.InvariantCulture);
-
-                var entry = new ControlEntryWrap
-                {
-                    Name = name,
-                    Time = time
-                };
-
-                switch (name)
-                {
-                    case "AccelerateReal":
-                        entry.Value = value;
-                        break;
-                    case "BrakeReal":
-                        entry.Value = value;
-                        break;
-                    case "Steer":
-                        entry.Value = -value; // Fix, official is right=1, left=-1
-                        break;
-                }
-
-                entries.Add(entry);
-            }
-
-            return Process(entries);
+            throw new Exception("No ghosts found.");
         }
 
-        public CGameCtnMediaClip Process(IEnumerable<ControlEntryWrap> entries)
+        return (ghostWraps, longestTime.Value);
+    }
+
+    public NodeFile<CGameCtnMediaClip> Produce()
+    {
+        var tracks = new List<CGameCtnMediaTrack>();
+
+        Config.UpdateDesign();
+        
+        var forManiaPlanet = IsManiaPlanet();
+
+        if (forManiaPlanet)
         {
-            return ProcessControlEntries(entries, entries.Last().Time);
+            Config.Design.SetupForManiaPlanet();
         }
 
-        private static IEnumerable<CGameCtnGhost> ExtractGhosts(CGameCtnMediaClip clip)
+        foreach (var ghost in ghosts)
         {
-            foreach (var track in clip.Tracks)
-                foreach (var block in track.Blocks)
-                    if (block is CGameCtnMediaBlockGhost ghostBlock)
-                        yield return ghostBlock.GhostModel;
+            GenerateGhostInputs(tracks, ghost);
         }
 
-        private CGameCtnMediaClip ProcessGhost(CGameCtnGhost ghost)
+        var clip = CGameCtnMediaClip.Create()
+            .WithTracks(tracks)
+            .ForTMUF()
+            .Build();
+
+        var firstGhost = ghosts.FirstOrDefault()?.Object;
+
+        var mapName = replay?.Challenge?.MapName ?? replay?.MapInfo?.Id ?? firstGhost?.Validate_ChallengeUid ?? "unknownmap";
+        var time = firstGhost?.RaceTime.ToTmString(useApostrophe: true) ?? "unfinished";
+        var author = firstGhost?.GhostNickname ?? firstGhost?.GhostLogin ?? "unnamed";
+
+        var pureFileName = $"ClipInput2_{TextFormatter.Deformat(mapName)}_{time}_{TextFormatter.Deformat(author)}.Clip.Gbx";
+        var validFileName = string.Join("_", pureFileName.Split(Path.GetInvalidFileNameChars()));
+
+        var dir = forManiaPlanet ? "Replays/Clips/ClipInput2" : "Tracks/ClipInput2";
+
+        return new(clip, $"{dir}/{validFileName}", forManiaPlanet);
+    }
+
+    private void GenerateGhostInputs(IList<CGameCtnMediaTrack> tracks, Ghost ghost)
+    {
+        var inputTrackBuilder = new InputTrackBuilder(Config, tracks, ghost.Inputs, endTime);
+
+        for (var i = 0; i < 2; i++)
         {
-            if (ghost == null)
-                throw new ArgumentNullException(nameof(ghost));
+            var left = Convert.ToBoolean(i); // according to mediatracker 2d coord system
 
-            Console.WriteLine("Processing CGameCtnGhost...");
+            Config.Design.SetSteer(left);
 
-            if (ghost.TryGetChunk(out CGameCtnGhost.Chunk03092025 _))
+            if (Config.EnableAnalogSteerValue)
             {
-                Console.WriteLine("Chunk 0x025 found.");
+                var steerValueTrackName = string.Format(Config.Dictionary.MediaTrackerTrackSteerValue, left ? Config.Dictionary.Left : Config.Dictionary.Right);
 
-                if (ghost.Validate_ExeVersion?.StartsWith("TrackmaniaTurbo") == true)
-                {
-                    Console.WriteLine("TrackmaniaTurbo in Validate_ExeVersion found.");
-
-                    throw new TMTurboNotSupportedException();
-                }
-                else
-                {
-                    Console.WriteLine("The replay comes from ManiaPlanet.");
-
-                    GameVersion = Game.ManiaPlanet;
-                }
-            }
-            else
-            {
-                Console.WriteLine("The replay comes from TMUF or older game.");
-
-                GameVersion = Game.TMUF;
+                inputTrackBuilder.Add<SteerValueBuilder>(steerValueTrackName);
             }
 
-            return ProcessControlEntries(ghost.ControlEntries.Select(x => new ControlEntryWrap(x)), TimeSpan.FromMilliseconds(ghost.EventsDuration));
+            var steerTrackName = string.Format(Config.Dictionary.MediaTrackerTrackSteer, left ? Config.Dictionary.Left : Config.Dictionary.Right);
+
+            inputTrackBuilder.Add<SteerBuilder>(steerTrackName);
+
+            var steerBackTrackName = string.Format(Config.Dictionary.MediaTrackerTrackSteerBack, left ? Config.Dictionary.Left : Config.Dictionary.Right);
+
+            inputTrackBuilder.Add<SteerBackBuilder>(steerBackTrackName);
+
+            var strafeTrackName = string.Format(Config.Dictionary.MediaTrackerTrackStrafe, left ? Config.Dictionary.Left : Config.Dictionary.Right);
+
+            inputTrackBuilder.Add<StrafeBuilder>(strafeTrackName);
         }
 
-        private CGameCtnMediaClip ProcessControlEntries(IEnumerable<ControlEntryWrap> entries, TimeSpan eventsDuration)
+        Config.Design.SetSteer(null);
+
+        if (Config.EnableAnalogAccelValue)
         {
-            if (entries == null)
-                throw new NoInputsException();
-
-            Console.WriteLine("Processing the inputs...");
-
-            Console.WriteLine("Creating CGameCtnMediaClip...");
-
-            var clip = new CGameCtnMediaClip()
-            {
-                LocalPlayerClipEntIndex = -1
-            };
-
-            switch (GameVersion)
-            {
-                case Game.TMUF:
-                    Console.WriteLine("Creating CGameCtnMediaClip chunks 0x004, 0x005, 0x007...");
-                    clip.CreateChunk<CGameCtnMediaClip.Chunk03079004>();
-                    clip.CreateChunk<CGameCtnMediaClip.Chunk03079005>();
-                    clip.CreateChunk<CGameCtnMediaClip.Chunk03079007>();
-                    break;
-                case Game.ManiaPlanet:
-                case Game.Unknown: // for TXT
-                    Console.WriteLine("Creating CGameCtnMediaClip chunk 0x00D...");
-                    clip.CreateChunk<CGameCtnMediaClip.Chunk0307900D>();
-                    break;
-            }
-
-            var tracks = new List<CGameCtnMediaTrack>();
-
-            var hasAccelReal = false;
-            var hasBrakeReal = false;
-            var hasAnalogSteering = false;
-
-            foreach (var entry in entries)
-            {
-                switch (entry.Name)
-                {
-                    case "Accelerate":
-                    case "Brake":
-                    case "SteerLeft":
-                    case "SteerRight":
-                    case "Steer left":
-                    case "Steer right":
-                        break;
-                    case "Gas":
-                        hasAccelReal = true;
-                        hasBrakeReal = true;
-                        break;
-                    case "AccelerateReal":
-                        if (entry.Value >= 0)
-                            hasAccelReal = true;
-                        break;
-                    case "BrakeReal":
-                        if (entry.Value >= 0)
-                            hasBrakeReal = true;
-                        break;
-                    case "Steer (analog)":
-                    case "Steer":
-                        hasAnalogSteering = true;
-                        break;
-                }
-            }
-
-            Console.WriteLine("Processing acceleration input...");
-            ProcessDigitalInput(entries, eventsDuration, tracks,
-                onlyAcceleration: hasAnalogSteering,
-                usesAnalogAccel: hasAccelReal,
-                usesAnalogBrake: hasBrakeReal);
-
-            if (hasAnalogSteering)
-            {
-                Console.WriteLine("Processing analog steering input...");
-                ProcessAnalogSteering(entries, eventsDuration, tracks);
-            }
-
-            if (hasAccelReal || hasBrakeReal)
-            {
-                Console.WriteLine("Processing analog acceleration/brake...");
-
-                ProcessAnalogAccel(entries, eventsDuration, tracks,
-                    hasAccelReal ? Keys.FirstOrDefault(x => x.EntryName == "Accelerate") : null,
-                    hasBrakeReal ? Keys.FirstOrDefault(x => x.EntryName == "Brake") : null);
-            }
-
-            // Defines the start of the first event
-            var eventStartTime = new TimeSpan();
-
-            if (!ShowAfterInteraction)
-                eventStartTime = TimeSpan.FromMilliseconds(Math.Min(0, entries.Min(x => x.Time.TotalMilliseconds)));
-
-            clip.Tracks = tracks;
-
-            if (StartOffset != TimeSpan.Zero)
-            {
-                Console.WriteLine($"Offsetting the blocks by {StartOffset.TotalSeconds} seconds.");
-
-                foreach (var track in tracks)
-                {
-                    foreach (var block in track.Blocks)
-                    {
-                        switch (block)
-                        {
-                            case CGameCtnMediaBlockImage blockImage:
-                                foreach (var key in blockImage.Effect.Keys)
-                                    key.Time += StartOffset;
-                                break;
-                            case CGameCtnMediaBlockTriangles blockTriangles:
-                                foreach (var key in blockTriangles.Keys)
-                                    key.Time += StartOffset;
-                                break;
-                            case CGameCtnMediaBlockText blockText:
-                                foreach (var key in blockText.Effect.Keys)
-                                    key.Time += StartOffset;
-                                break;
-                        }
-                    }
-                }
-            }
-
-            Console.WriteLine("Building the final GBX file...");
-
-            return clip;
+            inputTrackBuilder.Add<AccelValueBuilder>(Config.Dictionary.MediaTrackerTrackAccelValue);
         }
 
-        private void ProcessDigitalInput(IEnumerable<ControlEntryWrap> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks,
-            bool onlyAcceleration, bool usesAnalogAccel, bool usesAnalogBrake)
+        inputTrackBuilder.Add<AccelBuilder>(Config.Dictionary.MediaTrackerTrackAccel);
+        inputTrackBuilder.Add<AccelBackBuilder>(Config.Dictionary.MediaTrackerTrackAccelBack);
+
+        if (Config.EnableAnalogBrakeValue)
         {
-            var trackDictionary = new Dictionary<KeyboardKey, CGameCtnMediaTrack>();
-            var currentImageDictionary = new Dictionary<KeyboardKey, CGameCtnMediaBlockImage>();
-            var pressedKeyDictionary = new Dictionary<KeyboardKey, bool>();
+            inputTrackBuilder.Add<BrakeValueBuilder>(Config.Dictionary.MediaTrackerTrackBrakeValue);
+        }
 
-            // Defines the start of the first event
-            var eventStartTime = new TimeSpan();
+        inputTrackBuilder.Add<BrakeBuilder>(Config.Dictionary.MediaTrackerTrackBrake);
+        inputTrackBuilder.Add<BrakeBackBuilder>(Config.Dictionary.MediaTrackerTrackBrakeBack);
 
-            if (!ShowAfterInteraction)
-                eventStartTime = TimeSpan.FromMilliseconds(Math.Min(0, entries.Min(x => x.Time.TotalMilliseconds)));
+        inputTrackBuilder.Add<WalkForwardBuilder>(Config.Dictionary.MediaTrackerTrackWalkForward);
+        inputTrackBuilder.Add<WalkBackwardBuilder>(Config.Dictionary.MediaTrackerTrackWalkBackward);
 
-            (string imageOff, string imageOn) DetermineImages(KeyboardKey key, bool isSteerInput)
+        inputTrackBuilder.Add<MouseBuilder>(Config.Dictionary.MediaTrackerTrackMouse);
+
+        inputTrackBuilder.Add<JumpBuilder>(Config.Dictionary.MediaTrackerTrackJump);
+        inputTrackBuilder.Add<HornBuilder>(Config.Dictionary.MediaTrackerTrackHorn);
+        inputTrackBuilder.Add<RespawnBuilder>(Config.Dictionary.MediaTrackerTrackRespawn);
+        inputTrackBuilder.Add<SecondaryRespawnBuilder>(Config.Dictionary.MediaTrackerTrackSecondaryRespawn);
+
+        inputTrackBuilder.AddActionKeys(ghost.Object?.PlayerInputs?.FirstOrDefault()?.Version);
+    }
+
+    private bool IsManiaPlanet()
+    {
+        var forManiaPlanet = ghosts.Select(x => x.Object)
+            .OfType<CGameCtnGhost>()
+            .All(GameVersion.IsManiaPlanet);
+
+        if (!forManiaPlanet)
+        {
+            var someAreManiaPlanet = ghosts.Select(x => x.Object)
+                .OfType<CGameCtnGhost>()
+                .Any(GameVersion.IsManiaPlanet);
+
+            if (someAreManiaPlanet)
             {
-                var imageOff = key.ImageOff;
-                var imageOn = key.ImageOn;
-
-                if (!isSteerInput)
-                {
-                    if (usesAnalogAccel && key.EntryName == "Accelerate")
-                    {
-                        imageOff = "{0}_Analog.png";
-                        imageOn = "{0}_Analog_Accel.png";
-                    }
-
-                    if (usesAnalogBrake && key.EntryName == "Brake")
-                    {
-                        imageOff = "{0}_Analog.png";
-                        imageOn = "{0}_Analog_Brake.png";
-                    }
-                }
-
-                return (
-                    string.Format(imageOff, (int)Theme),
-                    string.Format(imageOn, (int)Theme)
-                );
+                throw new NotSupportedException("Some ghosts are from ManiaPlanet, but not all. This is not supported.");
             }
 
-            foreach (var key in Keys)
+            if (!ghosts.Select(x => x.Object).OfType<CGameCtnGhost>().Any())
             {
-                var (imageOff, imageOn) = DetermineImages(key, key.IsSteerInput);
-
-                if (!onlyAcceleration || !key.IsSteerInput)
-                {
-                    var track = CreateMediaTrack(key.TrackName);
-                    trackDictionary[key] = track;
-
-                    currentImageDictionary[key] = null;
-                    pressedKeyDictionary[key] = false;
-
-                    if (!ShowAfterInteraction)
-                    {
-                        var blockImage = CreateImageBlock(imageOff, eventStartTime, key.Position);
-
-                        trackDictionary[key].Blocks.Add(blockImage);
-                        currentImageDictionary[key] = blockImage;
-                    }
-                }
-            }
-
-            foreach (var entry in entries)
-            {
-                foreach (var key in Keys)
-                {
-                    var (imageOff, imageOn) = DetermineImages(key, key.IsSteerInput);
-
-                    if (!onlyAcceleration || !key.IsSteerInput)
-                    {
-                        if (key.EntryNames.Contains(entry.Name))
-                        {
-                            if (entry.IsEnabled == true)
-                            {
-                                if (!pressedKeyDictionary[key])
-                                {
-                                    var time = entry.Time;
-
-                                    if (currentImageDictionary[key] != null)
-                                    {
-                                        currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(time, key.Position);
-                                    }
-
-                                    var blockImage = CreateImageBlock(imageOn, time, key.Position);
-
-                                    trackDictionary[key].Blocks.Add(blockImage);
-                                    currentImageDictionary[key] = blockImage;
-                                    pressedKeyDictionary[key] = true;
-                                }
-                            }
-                            else
-                            {
-                                var prevTime = currentImageDictionary[key].Effect.Keys[0].Time;
-                                var time = entry.Time;
-
-                                if (AdjustToFPS)
-                                {
-                                    var blockLength = time - prevTime;
-
-                                    if (blockLength < TimeSpan.FromSeconds(1 / FPS))
-                                        time = prevTime + TimeSpan.FromSeconds(1 / FPS);
-                                }
-
-                                currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(time, key.Position);
-
-                                var blockImage = CreateImageBlock(imageOff, time, key.Position);
-
-                                trackDictionary[key].Blocks.Add(blockImage);
-                                currentImageDictionary[key] = blockImage;
-                                pressedKeyDictionary[key] = false;
-                            }
-                        }
-                    }
-                }
-            }
-
-            foreach (var key in Keys)
-            {
-                if (!onlyAcceleration || !key.IsSteerInput)
-                {
-                    currentImageDictionary[key].Effect.Keys[1] = CreateSimiKey(eventsDuration, key.Position);
-
-                    tracks.Add(trackDictionary[key]);
-                }
+                forManiaPlanet = Config.PreferManiaPlanet;
             }
         }
 
-        private void ProcessAnalogAccel(IEnumerable<ControlEntryWrap> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks, KeyboardKey accelKey, KeyboardKey brakeKey)
+        return forManiaPlanet;
+    }
+
+    private static TimeInt32? GetEndTime(CGameCtnGhost ghost)
+    {
+        var smEndTime = ghost.RecordData?.End;
+
+        if (smEndTime.HasValue)
         {
-            // Defines the start of the first event
-            var eventStartTime = new TimeSpan();
-
-            if (!ShowAfterInteraction)
-                eventStartTime = TimeSpan.FromMilliseconds(Math.Min(0, entries.Min(x => x.Time.TotalMilliseconds)));
-
-            var trackAccelPad = CreateMediaTrack("Pad Acceleration");
-            tracks.Add(trackAccelPad);
-
-            var trackBrakePad = CreateMediaTrack("Pad Brake");
-            tracks.Add(trackBrakePad);
-
-            var accelPadQuad = default(CGameCtnMediaBlockTriangles);
-            var brakePadQuad = default(CGameCtnMediaBlockTriangles);
-
-            var lastAccelerateEntry = entries.Last(x => x.Name == "Gas" || x.Name == "AccelerateReal" || x.Name == "Accelerate");
-            var lastBrakeEntry = entries.Last(x => x.Name == "Gas" || x.Name == "BrakeReal" || x.Name == "Brake");
-
-            foreach (var entry in entries)
-            {
-                if (entry.Name == "Gas" || entry.Name == "AccelerateReal")
-                {
-                    CompleteTheTriangle(accelPadQuad, entry.Time);
-
-                    if (entry.Value > 0)
-                    {
-                        accelPadQuad = CreateKeyPadMoment(accelKey, entry.Value.Value, entry.Time);
-                        trackAccelPad.Blocks.Add(accelPadQuad);
-
-                        if (entry.Equals(lastAccelerateEntry))
-                        {
-                            CompleteTheTriangle(accelPadQuad, eventsDuration);
-                        }
-                    }
-                    else
-                    {
-                        accelPadQuad = null;
-                    }
-                }
-
-                if (entry.Name == "Gas" || entry.Name == "BrakeReal")
-                {
-                    CompleteTheTriangle(brakePadQuad, entry.Time);
-
-                    if ((entry.Value > 0 && entry.Name != "Gas") || (entry.Name == "Gas" && entry.Value < 0))
-                    {
-                        brakePadQuad = CreateKeyPadMoment(brakeKey, entry.Value.Value, entry.Time);
-                        trackBrakePad.Blocks.Add(brakePadQuad);
-
-                        if (entry.Equals(lastBrakeEntry))
-                        {
-                            CompleteTheTriangle(brakePadQuad, eventsDuration);
-                        }
-                    }
-                    else
-                    {
-                        brakePadQuad = null;
-                    }
-                }
-
-                if (entry.Name == "Accelerate")
-                {
-                    CompleteTheTriangle(accelPadQuad, entry.Time);
-                    accelPadQuad = null;
-                }
-
-                if (entry.Name == "Brake")
-                {
-                    CompleteTheTriangle(brakePadQuad, entry.Time);
-                    brakePadQuad = null;
-                }
-            }
+            return smEndTime;
         }
 
-        private static void CompleteTheTriangle(CGameCtnMediaBlockTriangles triangles, TimeSpan time)
+        var tmEndTime = ghost.SampleData?.Samples.LastOrDefault()?.Time;
+
+        if (tmEndTime.HasValue)
         {
-            if (triangles is not null)
-            {
-                var key = new CGameCtnMediaBlockTriangles.Key(triangles)
-                {
-                    Time = time,
-                    Positions = triangles.Keys[0].Positions
-                };
-
-                triangles.Keys.Add(key);
-            }
+            return tmEndTime.Value + ghost.SampleData?.SamplePeriod;
         }
-
-        private void ProcessAnalogSteering(IEnumerable<ControlEntryWrap> entries, TimeSpan eventsDuration, IList<CGameCtnMediaTrack> tracks)
-        {
-            // Defines the start of the first event
-            var eventStartTime = new TimeSpan();
-
-            if (!ShowAfterInteraction)
-                eventStartTime = TimeSpan.FromMilliseconds(Math.Min(0, entries.Min(x => x.Time.TotalMilliseconds)));
-
-            CreatePad(Side.Left, $"{(int)Theme}_PadLeft_2.png", $"{(int)Theme}_PadLeft_2_On.png", eventStartTime, eventsDuration, tracks, entries);
-            CreatePad(Side.Right, $"{(int)Theme}_PadRight_2.png", $"{(int)Theme}_PadRight_2_On.png", eventStartTime, eventsDuration, tracks, entries);
-
-            var trackPad = CreateMediaTrack("Pad");
-            tracks.Add(trackPad);
-
-            var padQuad = default(CGameCtnMediaBlockTriangles);
-
-            var inverse = -1;
-            var lastEntry = entries.Last(x => x.Name == "Steer" || x.Name == "Steer (analog)");
-
-            foreach (var entry in entries)
-            {
-                if (entry.Name == "_FakeDontInverseAxis" && entry.IsEnabled == true)
-                {
-                    inverse = 1;
-                }
-
-                switch (entry.Name)
-                {
-                    case "Steer":
-                    case "Steer (analog)":
-                        {
-                            CompleteTheTriangle(padQuad, entry.Time);
-
-                            if (entry.Value > 0 || entry.Value < 0)
-                            {
-                                padQuad = CreatePadMoment(entry.Value.Value * inverse, entry.Time);
-                                trackPad.Blocks.Add(padQuad);
-
-                                if (entry.Equals(lastEntry))
-                                {
-                                    CompleteTheTriangle(padQuad, eventsDuration);
-                                    continue;
-                                }
-                            }
-                            else
-                            {
-                                padQuad = null;
-                            }
-
-                            break;
-                        }
-                }
-            }
-        }
-
-        private CGameCtnMediaBlockTriangles CreateKeyPadMoment(KeyboardKey keyboardKey, float value, TimeSpan time)
-        {
-            if (value == 0) return null;
-
-            var color = PadColor;
-            if (keyboardKey.EntryName == "Brake")
-                color = PadBrakeColor;
-
-            var padColorShine = (MathF.Min(1, color.X + 0.1f), MathF.Min(1, color.Y + 0.1f), MathF.Min(1, color.Z + 0.1f), color.W);
-
-            var trianglePad = new CGameCtnMediaBlockTriangles2D()
-            {
-                Vertices = new Vec4[] { padColorShine, color, color, padColorShine },
-                Triangles = new Int3[] { (0, 1, 2), (0, 2, 3) }
-            };
-
-            trianglePad.CreateChunk<CGameCtnMediaBlockTriangles.Chunk03029001>();
-
-            var positions = new Vec3[]
-            {
-                (new Vec3(-0.2f, -0.2f, 0) + keyboardKey.Position) * Scale,
-                (new Vec3(0.2f, -0.2f, 0) + keyboardKey.Position) * Scale,
-                (new Vec3(0.2f, 0.2f, 0) + keyboardKey.Position) * Scale,
-                (new Vec3(-0.2f, 0.2f, 0) + keyboardKey.Position) * Scale
-            };
-
-            TransformTriangles(ref positions);
-
-            var pos1Start = positions[0];
-            var pos2Start = positions[1];
-            var pos2End = positions[2];
-            var pos1End = positions[3];
-
-            if (keyboardKey.EntryName == "Brake")
-            {
-                pos1End = positions[0];
-                pos2End = positions[1];
-                pos2Start = positions[2];
-                pos1Start = positions[3];
-            }
-
-            var pos1Value = AdditionalMath.Lerp(pos1Start, pos1End, MathF.Abs(value));
-            var pos2Value = AdditionalMath.Lerp(pos2Start, pos2End, MathF.Abs(value));
-
-            var key = new CGameCtnMediaBlockTriangles.Key(trianglePad)
-            {
-                Time = time,
-                Positions = new Vec3[]
-                {
-                    pos1Start,
-                    pos1Value,
-                    pos2Value,
-                    pos2Start
-                }
-            };
-
-            trianglePad.Keys.Add(key);
-
-            return trianglePad;
-        }
-
-        private void CreatePad(Side side, string image, string imageOn, TimeSpan eventStartTime, TimeSpan eventsDuration,
-            IList<CGameCtnMediaTrack> tracks, IEnumerable<ControlEntryWrap> entries)
-        {
-            var trackBase = CreateMediaTrack($"Pad {side} Base");
-            tracks.Add(trackBase);
-
-            var sideMultiplier = 1;
-            if (side == Side.Right)
-                sideMultiplier = -1;
-
-            var imageBase = CreateImageBlock(image, eventStartTime, PadOffset * (sideMultiplier, 1), (2, 2));
-
-            var isPressed = false;
-            var position = PadOffset * (sideMultiplier, 1);
-
-            foreach (var entry in entries)
-            {
-                if ((side == Side.Left && entry.Name == "SteerLeft")
-                  || side == Side.Right && entry.Name == "SteerRight")
-                {
-                    if (entry.IsEnabled == true)
-                    {
-                        if (!isPressed)
-                        {
-                            var time = entry.Time;
-
-                            if (imageBase != null)
-                            {
-                                imageBase.Effect.Keys[1] = CreateSimiKey(time, position, (2, 2));
-                            }
-
-                            trackBase.Blocks.Add(imageBase);
-
-                            imageBase = CreateImageBlock(imageOn, time, position, (2, 2));
-
-                            isPressed = true;
-                        }
-                    }
-                    else
-                    {
-                        var prevTime = imageBase.Effect.Keys[0].Time;
-                        var time = entry.Time;
-
-                        if (AdjustToFPS)
-                        {
-                            var blockLength = time - prevTime;
-
-                            if (blockLength < TimeSpan.FromSeconds(1 / FPS))
-                                time = prevTime + TimeSpan.FromSeconds(1 / FPS);
-                        }
-
-                        imageBase.Effect.Keys[1] = CreateSimiKey(time, position, (2, 2));
-                        trackBase.Blocks.Add(imageBase);
-
-                        imageBase = CreateImageBlock(image, time, position, (2, 2));
-
-                        isPressed = false;
-                    }
-                }
-            }
-
-            imageBase.Effect.Keys[1] = CreateSimiKey(eventsDuration, position, (2, 2));
-            trackBase.Blocks.Add(imageBase);
-        }
-
-        private void TransformTriangles(ref Vec3[] positions)
-        {
-            for (var i = 0; i < positions.Length; i++)
-                positions[i] *= (AspectRatio.Y / AspectRatio.X, 1, 1);
-
-            var avgPos = new Vec3();
-            foreach (var pos in positions)
-                avgPos += pos;
-            avgPos = (avgPos.X / positions.Length, avgPos.Y / positions.Length, avgPos.Z / positions.Length);
-            var newAvgPos = avgPos * Space;
-            var offset = newAvgPos - avgPos;
-
-            for (var i = 0; i < positions.Length; i++)
-                positions[i] += offset + Position;
-        }
-
-        private CGameCtnMediaBlockTriangles CreatePadMoment(float value, TimeSpan time)
-        {
-            int sideMultiplier;
-            if (value == 0) return null;
-            else if (value > 0)
-                sideMultiplier = -1;
-            else
-                sideMultiplier = 1;
-
-            var padColorShine = (MathF.Min(1, PadColor.X + 0.1f), MathF.Min(1, PadColor.Y + 0.1f), MathF.Min(1, PadColor.Z + 0.1f), PadColor.W);
-
-            var trianglePad = new CGameCtnMediaBlockTriangles2D()
-            {
-                Vertices = new Vec4[] { padColorShine, PadColor, PadColor, padColorShine },
-                Triangles = new Int3[] { (0, 1, 2), (0, 2, 3) }
-            };
-
-            var chunk001 = trianglePad.CreateChunk<CGameCtnMediaBlockTriangles.Chunk03029001>();
-
-            var positions = new Vec3[]
-            {
-                PadStartPosition * (sideMultiplier, 1, 1) * Scale,
-                PadEndPosition * (sideMultiplier, 1, 1) * Scale,
-                PadEndPosition * (1, -1, 1) * (sideMultiplier, 1, 1) * Scale,
-                PadStartPosition * (1, -1, 1) * (sideMultiplier, 1, 1) * Scale,
-            };
-
-            TransformTriangles(ref positions);
-
-            var pos1Start = positions[0];
-            var pos1End = positions[1];
-            var pos2End = positions[2];
-            var pos2Start = positions[3];
-
-            var pos1Value = AdditionalMath.Lerp(pos1Start, pos1End, MathF.Abs(value));
-            var pos2Value = AdditionalMath.Lerp(pos2Start, pos2End, MathF.Abs(value));
-
-            var key = new CGameCtnMediaBlockTriangles.Key(trianglePad)
-            {
-                Time = time,
-                Positions = new Vec3[]
-                {
-                    pos1Start,
-                    pos1Value,
-                    pos2Value,
-                    pos2Start
-                }
-            };
-
-            trianglePad.Keys.Add(key);
-
-            return trianglePad;
-        }
-
-        private CGameCtnMediaTrack CreateMediaTrack(string name)
-        {
-            Console.WriteLine($"Creating media track {name}...");
-
-            var track = new CGameCtnMediaTrack
-            {
-                Name = name,
-                IsKeepPlaying = false,
-                Blocks = new List<CGameCtnMediaBlock>()
-            };
-
-            var chunk001 = track.CreateChunk<CGameCtnMediaTrack.Chunk03078001>();
-
-            switch (GameVersion)
-            {
-                case Game.TMUF:
-                    track.CreateChunk<CGameCtnMediaTrack.Chunk03078004>();
-                    chunk001.U02 = 2;
-                    break;
-                case Game.ManiaPlanet:
-                case Game.Unknown: // for TXT
-                    track.CreateChunk<CGameCtnMediaTrack.Chunk03078005>();
-                    chunk001.U02 = -1;
-                    break;
-            }
-
-            return track;
-        }
-
-        private CGameCtnMediaBlockImage CreateImageBlock(string image, TimeSpan time, Vec2 position, Vec2 scale, float depth = 0.5f)
-        {
-            var blockImage = new CGameCtnMediaBlockImage();
-
-            switch (GameVersion)
-            {
-                case Game.TMUF:
-                    blockImage.Image = new FileRef(2, null, Path.Combine(@"MediaTracker\Images", Path.GetFileName(image)),
-                    new Uri("https://bigbang1112.eu/projects/clipinput/" + image));
-                    break;
-                case Game.ManiaPlanet:
-                case Game.Unknown: // for TXT
-                    blockImage.Image = new FileRef(3, FileRef.DefaultChecksum, Path.Combine(@"Media\Images\Inputs", Path.GetFileName(image)),
-                    new Uri("https://bigbang1112.eu/projects/clipinput/" + image));
-                    break;
-            }
-
-            blockImage.CreateChunk<CGameCtnMediaBlockImage.Chunk030A5000>();
-
-            var effect = new CControlEffectSimi
-            {
-                Keys = new List<CControlEffectSimi.Key>
-                {
-                    CreateSimiKey(time, position, scale, depth), null
-                }
-            };
-
-            effect.CreateChunk<CControlEffectSimi.Chunk07010005>();
-            effect.Centered = true;
-            effect.IsInterpolated = true;
-
-            blockImage.Effect = effect;
-
-            return blockImage;
-        }
-
-        private CGameCtnMediaBlockImage CreateImageBlock(string image, TimeSpan time, Vec2 position)
-        {
-            return CreateImageBlock(image, time, position, (1, 1));
-        }
-
-        private CControlEffectSimi.Key CreateSimiKey(TimeSpan time, Vec2 position, Vec2 scale, float depth = 0.5f)
-        {
-            return new CControlEffectSimi.Key
-            {
-                Time = time,
-                ScaleX = scale.X * Scale.X / (AspectRatio.X / AspectRatio.Y),
-                ScaleY = scale.Y * Scale.Y,
-                Opacity = 1,
-                Depth = depth,
-                X = position.X * Space.X * Scale.X + Position.X,
-                Y = position.Y * Space.Y * Scale.Y + Position.Y
-            };
-        }
-
-        private CControlEffectSimi.Key CreateSimiKey(TimeSpan time, Vec2 position)
-        {
-            return CreateSimiKey(time, position, (1, 1));
-        }
+        
+        return ghost.RaceTime; // TMO samples should be fixed instead
     }
 }

@@ -1,0 +1,144 @@
+﻿@using System.Globalization;
+@using ClipInput.Client.Components;
+@using ClipInput.Designs;
+@using GBX.NET;
+@using System.Reflection;
+
+@inherits ToolComponentBase
+
+<div class="container">
+    <h2>
+        Clip Input @(typeof(ClipInputTool).Assembly.GetName().Version?.ToString(3) ?? "2")
+    </h2>
+    <div style="display: flex;gap: 10px;">
+        <div class="column">
+            <ImportFile></ImportFile>
+            <FileSelection Produces="true"
+                           GbxSelection="GbxSelection"
+                           SelectionChanged="SelectionChanged"
+                           ImportTypes="ImportTypes"></FileSelection>
+            <div>
+                <LookingFor ImportTypes="ImportTypes" @ref="lookingFor"></LookingFor>
+            </div>
+        </div>
+        
+        <Scene @ref="scene"
+               Config="Config"
+               SelectedDesignId="@SelectedDesignId"
+               SelectedSkinId="@SelectedSkinId"
+               Route="@Route"
+               GitHubAttribute="GitHubAttribute"></Scene>
+            
+        <div class="column">
+            <div class="designs rectangle">
+                <h3>Designs</h3>
+
+                @foreach (var designId in Designs)
+                {
+                    <button @onclick="() => SelectedDesignId = designId" class="@(Config?.DesignId == designId ? "selected" : "")">
+                        <img src="_content/ClipInput.Client/img/designs/@(designId).webp" width="200" /><div>
+                        @designId
+                            @if(designId == "Text")
+                            {
+                                <br />
+
+                                <span style="height: 22px;">(TMTurbo only)</span>
+                            }
+                    </div></button>
+                }
+            </div>
+            <div class="designs rectangle">
+                <h3>Skins</h3>
+
+                @if (Skins.TryGetValue(SelectedDesignId ?? "", out var skinsOnDesign))
+                {
+                    foreach (var skinId in skinsOnDesign)
+                    {
+                        <button @onclick="() => SelectedSkinId = skinId" class="@(Config?.SkinId == skinId || (skinId == "Default" && string.IsNullOrEmpty(Config?.SkinId)) ? "selected" : "")">
+                            <img src="_content/ClipInput.Client/img/designs/@SelectedDesignId/@(skinId).webp" width="200" /><div>
+                                @skinId
+                        </div></button>
+                    }
+                }
+            </div>
+            <ToolConfig Route="@Route" Configs="Configs" ConfigChanged="OnConfigChanged"></ToolConfig>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LookingFor? lookingFor;
+    private Scene? scene;
+
+    public ClipInputConfig? Config
+    {
+        get
+        {
+            if (Configs.TryGetValue(SelectedConfigName, out var config))
+            {
+                return config as ClipInputConfig;
+            }
+
+            return null;
+        }
+    }
+
+    private static GbxToolAPI.ToolGitHubAttribute? GitHubAttribute = typeof(ClipInputTool).GetCustomAttribute<GbxToolAPI.ToolGitHubAttribute>();
+
+    public string? SelectedDesignId
+    {
+        get => Config?.DesignId;
+        set
+        {
+            if (Config is not null)
+            {
+                Config.SkinId = "";
+                Config.DesignId = value ?? "";
+                UpdateConfig();
+            }
+            
+            //scene?.Refresh();
+        }
+    }
+
+    public string[] Designs { get; set; } = new[]
+    {
+        "Basic",
+        "Compact",
+        "Image",
+        "Text"
+    };
+
+    public Dictionary<string, string[]> Skins { get; set; } = new()
+    {
+        { "Basic", new[] { "Default", "LoveTAS" } },
+        { "Compact", new[] { "Default", "LoveTAS" } },
+        { "Image", new[] { "Default", "White", "Classic" } },
+        { "Text", new[] { "Default" } }
+    };
+
+    public string? SelectedSkinId
+    {
+        get => string.IsNullOrEmpty(Config?.SkinId) ? "Default" : Config.SkinId;
+        set
+        {
+            if (Config is not null)
+            {
+                Config.SkinId = value ?? "";
+                UpdateConfig();
+            }
+
+            //scene?.Refresh();
+        }
+    }
+
+    private void SelectionChanged()
+    {
+        StateHasChanged();
+    }
+
+    private void OnConfigChanged()
+    {
+        StateHasChanged(); // maybe only update preview?
+    }
+}

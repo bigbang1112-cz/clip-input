@@ -1,0 +1,397 @@
+﻿@using ClipInput.Designs;
+@using System.Globalization;
+@using GBX.NET;
+
+<div class="main rectangle">
+    <div class="wrapper" style="background: url('_content/ClipInput.Client/img/scenes/@(SelectedScene).webp') center/100%;">
+        <b class="preview">PREVIEW</b>
+
+        @if (SelectedDesignId == "Compact")
+        {
+            <b class="inaccuracy">Accurate visualisation of Compact is being worked on. Sorry for current inaccuracy.</b>
+        }
+
+        @if (Config is not null)
+        {
+            @if (UpRender != InputComponentRender.Invisible)
+            {
+                @if (SelectedDesignId == "Image")
+                {
+                    var src = AnalogAccel ? "Analog" : "Up" + (UpRender == InputComponentRender.On ? "_On" : "");
+                        
+                    <img class="mediatracker"
+                            src="/assets/tools/@Route/Images/@SelectedSkinId/@(src).webp"
+                            style="@GetCssPos(ImageDesign.GetDigitalAccelPos(Config)) @GetCssScale(ImageDesign.GetDigitalAccelScale(Config))"
+                            @onmouseenter="() => UpRender = InputComponentRender.On"
+                            @onmouseleave="() => UpRender = InputComponentRender.Visible" />
+                }
+                else if (SelectedDesignId is "Basic" or "Text" or "Compact")
+                {
+                    var color = UpRender == InputComponentRender.On ? Config.ActiveColor : Config.InactiveColor;
+                            
+                    <div class="mediatracker"
+                            style="background: rgb(@((int)(color.X * 255)), @((int)(color.Y * 255)), @((int)(color.Z * 255))); @GetCssPos(ImageDesign.GetDigitalAccelPos(Config)) @GetCssScale(ImageDesign.GetDigitalAccelScale(Config))"
+                            @onmouseenter="() => UpRender = InputComponentRender.On"
+                            @onmouseleave="() => UpRender = InputComponentRender.Visible" />
+                }
+            }
+
+            @if (DownRender != InputComponentRender.Invisible)
+            {
+                @if (SelectedDesignId == "Image")
+                {
+                    var src = AnalogBrake ? "Analog" : "Down" + (DownRender == InputComponentRender.On ? "_On" : "");
+
+                    <img class="mediatracker"
+                            src="/assets/tools/@Route/Images/@SelectedSkinId/@(src).webp"
+                            style="@GetCssPos(ImageDesign.GetDigitalBrakePos(Config)) @GetCssScale(ImageDesign.GetDigitalBrakeScale(Config))"
+                            @onmouseenter="() => DownRender = InputComponentRender.On"
+                            @onmouseleave="() => DownRender = InputComponentRender.Visible" />
+                }
+                else if (SelectedDesignId is "Basic" or "Text" or "Compact")
+                {
+                    var color = DownRender == InputComponentRender.On ? Config.BrakeColor : Config.InactiveColor;
+
+                    <div class="mediatracker"
+                            style="background: rgb(@((int)(color.X * 255)), @((int)(color.Y * 255)), @((int)(color.Z * 255))); @GetCssPos(ImageDesign.GetDigitalBrakePos(Config)) @GetCssScale(ImageDesign.GetDigitalBrakeScale(Config))"
+                            @onmouseenter="() => DownRender = InputComponentRender.On"
+                            @onmouseleave="() => DownRender = InputComponentRender.Visible" />
+                }
+            }
+
+            @if (AnalogSteer)
+            {
+                @if (SelectedDesignId == "Image")
+                {
+                    <img class="mediatracker"
+                            src="/assets/tools/@Route/Images/@SelectedSkinId/PadLeft.webp"
+                            style="@GetCssPos(ImageDesign.GetAnalogSteerBackPos(Config, steerMultiplier: 1)) @GetCssScale(ImageDesign.GetAnalogSteerBackScale(Config))" />
+                        
+                    <img class="mediatracker"
+                            src="/assets/tools/@Route/Images/@SelectedSkinId/PadRight.webp"
+                            style="@GetCssPos(ImageDesign.GetAnalogSteerBackPos(Config, steerMultiplier: -1)) @GetCssScale(ImageDesign.GetAnalogSteerBackScale(Config))" />
+                }
+                else if (SelectedDesignId is "Basic" or "Text" or "Compact")
+                {
+                    var color = Config.InactiveColor;
+
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="mediatracker" style="color: rgb(@((int)(color.X * 255)), @((int)(color.Y * 255)), @((int)(color.Z * 255))); @GetCssPos(ImageDesign.GetAnalogSteerBackPos(Config, steerMultiplier: 1)) @GetCssScale(ImageDesign.GetAnalogSteerBackScale(Config))">
+                        <polygon points="20,0 0,10 20,20" fill="currentColor" />
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="mediatracker" style="color: rgb(@((int)(color.X * 255)), @((int)(color.Y * 255)), @((int)(color.Z * 255))); @GetCssPos(ImageDesign.GetAnalogSteerBackPos(Config, steerMultiplier: -1)) @GetCssScale(ImageDesign.GetAnalogSteerBackScale(Config))">
+                        <polygon points="20,10 0,0 0,20" fill="currentColor" />
+                    </svg>
+                }
+            }
+            else
+            {
+                @if (SelectedDesignId == "Image")
+                {
+                    <img class="mediatracker"
+                            src="/assets/tools/@Route/Images/@SelectedSkinId/Left@(LeftRender == InputComponentRender.On ? "_On" : "").webp"
+                            style="@GetCssPos(ImageDesign.GetDigitalSteerPos(Config, steerMultiplier: 1)) @GetCssScale(ImageDesign.GetDigitalSteerScale(Config))"
+                            @onmouseenter="() => LeftRender = InputComponentRender.On"
+                            @onmouseleave="() => LeftRender = InputComponentRender.Visible" />
+                        
+                    <img class="mediatracker"
+                            src="/assets/tools/@Route/Images/@SelectedSkinId/Right@(RightRender == InputComponentRender.On ? "_On" : "").webp"
+                            style="@GetCssPos(ImageDesign.GetDigitalSteerPos(Config, steerMultiplier: -1)) @GetCssScale(ImageDesign.GetDigitalSteerScale(Config))"
+                            @onmouseenter="() => RightRender = InputComponentRender.On"
+                            @onmouseleave="() => RightRender = InputComponentRender.Visible" />
+                }
+                else if (SelectedDesignId is "Basic" or "Text" or "Compact")
+                {
+                    var colorLeft = LeftRender == InputComponentRender.On ? Config.ActiveColor : Config.InactiveColor;
+                    var colorRight = RightRender == InputComponentRender.On ? Config.ActiveColor : Config.InactiveColor;
+
+                    <div class="mediatracker"
+                            style="background: rgb(@((int)(colorLeft.X * 255)), @((int)(colorLeft.Y * 255)), @((int)(colorLeft.Z * 255))); @GetCssPos(ImageDesign.GetDigitalSteerPos(Config, steerMultiplier: 1)) @GetCssScale(ImageDesign.GetDigitalSteerScale(Config))"
+                            @onmouseenter="() => LeftRender = InputComponentRender.On"
+                            @onmouseleave="() => LeftRender = InputComponentRender.Visible" />
+
+                    <div class="mediatracker"
+                            style="background: rgb(@((int)(colorRight.X * 255)), @((int)(colorRight.Y * 255)), @((int)(colorRight.Z * 255))); @GetCssPos(ImageDesign.GetDigitalSteerPos(Config, steerMultiplier: -1)) @GetCssScale(ImageDesign.GetDigitalSteerScale(Config))"
+                            @onmouseenter="() => RightRender = InputComponentRender.On"
+                            @onmouseleave="() => RightRender = InputComponentRender.Visible" />
+                }
+            }
+
+            @if (Config.EnableActionKeys)
+            {
+                @for (var akI = 0; akI < PressedActionKeys.Length; akI++)
+                {
+                    var keyNum = (akI + 1) % PressedActionKeys.Length;
+
+                    @if (SelectedDesignId == "Image")
+                    {
+                        <img class="mediatracker"
+                                src="/assets/tools/@Route/Images/@SelectedSkinId/@(keyNum).webp"
+                                style="@GetCssPos(ImageDesign.GetActionSlotPos(Config, akI)) @GetCssScale(ImageDesign.GetActionSlotScale(Config))" />
+                    }
+                    else if (SelectedDesignId is "Basic" or "Compact")
+                    {
+                        var color = Config.InactiveColor;
+
+                        <div class="mediatracker"
+                                style="background: rgb(@((int)(color.X * 255)), @((int)(color.Y * 255)), @((int)(color.Z * 255))); @GetCssPos(ImageDesign.GetActionSlotPos(Config, akI)) @GetCssScale(ImageDesign.GetActionSlotScale(Config))" />
+                    }
+                }
+            }
+
+            @if (Config.EnableMouse)
+            {
+                @if (SelectedDesignId == "Image")
+                {
+                    <img class="mediatracker pointer" oncontextmenu="event.preventDefault()"
+                            src="/assets/tools/@Route/Images/@SelectedSkinId/Mouse@(GetMouseVisualSuffix()).webp"
+                            style="@GetCssPos(ImageDesign.GetMousePos(Config, Vec2.Zero, Vec2.Zero)) @GetCssScale(ImageDesign.GetMouseScale(Config) * (2/3f, 1))"
+                            @onmousedown="args => MouseClickOnMouse(args, true)" @onmouseup="args => MouseClickOnMouse(args, false)" />
+                }
+                else if (SelectedDesignId is "Basic" or "Compact")
+                {
+                    var mousePositions = BasicDesign.GetMousePositions();
+                    var mouseTriangles = BasicDesign.GetMouseTriangles();
+                            
+                    var minX = mousePositions.Select(x => x.X).Min();
+                    var minY = mousePositions.Select(x => x.Y).Min();
+                    var maxX = mousePositions.Select(x => x.X).Max();
+                    var maxY = mousePositions.Select(x => x.Y).Max();
+                            
+                    var color = Config.InactiveColor;
+
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 @((maxX - minX).ToString(CultureInfo.InvariantCulture)) @((maxY - minY).ToString(CultureInfo.InvariantCulture))" class="mediatracker" style="color: rgb(@((int)(color.X * 255)), @((int)(color.Y * 255)), @((int)(color.Z * 255))); @GetCssPos(ImageDesign.GetMousePos(Config, Vec2.Zero, Vec2.Zero)) @GetCssScale(ImageDesign.GetMouseScale(Config) * (2/3f, 1))" oncontextmenu="event.preventDefault()">
+                        @foreach (var triangle in mouseTriangles)
+                        {
+                            var firstPoint = mousePositions[triangle.X] * new Vec3(1, -1, 1);
+                            var secondPoint = mousePositions[triangle.Y] * new Vec3(1, -1, 1);
+                            var thirdPoint = mousePositions[triangle.Z] * new Vec3(1, -1, 1);
+
+                            var firstActualPoint = new Vec2(firstPoint.X, firstPoint.Y) - new Vec2(minX, minY);
+                            var secondActualPoint = new Vec2(secondPoint.X, secondPoint.Y) - new Vec2(minX, minY);
+                            var thirdActualPoint = new Vec2(thirdPoint.X, thirdPoint.Y) - new Vec2(minX, minY);
+
+                            <polygon points="@firstActualPoint.X.ToString(CultureInfo.InvariantCulture),@firstActualPoint.Y.ToString(CultureInfo.InvariantCulture) @secondActualPoint.X.ToString(CultureInfo.InvariantCulture),@secondActualPoint.Y.ToString(CultureInfo.InvariantCulture) @thirdActualPoint.X.ToString(CultureInfo.InvariantCulture),@thirdActualPoint.Y.ToString(CultureInfo.InvariantCulture)" fill="currentColor" stroke="currentColor" stroke-width="0.005" />
+                        }
+                    </svg>
+                }
+            }
+
+            @if (Config.EnableJump)
+            {
+                @if (SelectedDesignId == "Image")
+                {
+                    <img class="mediatracker"
+                         src="/assets/tools/@Route/Images/@SelectedSkinId/Jump@(JumpRender == InputComponentRender.On ? "_On" : "").webp"
+                         style="@GetCssPos(ImageDesign.GetJumpPos(Config)) @GetCssScale(ImageDesign.GetJumpScale(Config) * (1, 1/6f))"
+                         @onmouseenter="() => JumpRender = InputComponentRender.On"
+                         @onmouseleave="() => JumpRender = InputComponentRender.Visible"/>
+                }
+                else if (SelectedDesignId is "Basic" or "Compact" or "Text")
+                {
+                    var color = Config.InactiveColor;
+
+                    <div class="mediatracker text" style="transform: translate(-50%, -50%) scale(@(Config.JumpScale.X.ToString(CultureInfo.InvariantCulture)), @(Config.JumpScale.Y.ToString(CultureInfo.InvariantCulture)));color: rgb(@((int)(color.X * 255)), @((int)(color.Y * 255)), @((int)(color.Z * 255))); @GetCssPos(ImageDesign.GetJumpPos(Config)) @GetCssScale(ImageDesign.GetJumpScale(Config) * (1, 1/6f))">
+                        JUMP
+                    </div>
+                }
+            }
+
+            @if (Config.EnableHorn)
+            {
+                @if (SelectedDesignId == "Image")
+                {
+                    <img class="mediatracker"
+                        onclick="document.getElementById('horn').play()"
+                        src="/assets/tools/@Route/Images/@SelectedSkinId/Horn@(HornRender == InputComponentRender.On ? "_On" : "").webp"
+                        style="@GetCssPos(ImageDesign.GetHornPos(Config)) @GetCssScale(ImageDesign.GetHornScale(Config) * (1, 1/3f))"
+                        @onmouseenter="() => HornRender = InputComponentRender.On"
+                        @onmouseleave="() => HornRender = InputComponentRender.Visible"/>
+                }
+                else if (SelectedDesignId is "Basic" or "Compact" or "Text")
+                {
+                    var color = Config.InactiveColor;
+
+                    <div class="mediatracker text"
+                         onclick="document.getElementById('horn').play()"
+                         style="font-size: 1.5rem; transform: translate(-50%, -50%) scale(@(Config.HornScale.X.ToString(CultureInfo.InvariantCulture)), @(Config.HornScale.Y.ToString(CultureInfo.InvariantCulture)));color: rgb(@((int)(color.X * 255)), @((int)(color.Y * 255)), @((int)(color.Z * 255))); @GetCssPos(ImageDesign.GetHornPos(Config)) @GetCssScale(ImageDesign.GetHornScale(Config) * (1, 1/3f))">
+                        HORN
+                    </div>
+                }
+            }
+
+            <audio id="horn">
+                <source src="_content/ClipInput.Client/audio/horn.wav" type="audio/wav">
+            </audio>
+
+            @if (Config.EnableRespawn)
+            {
+                @if (SelectedDesignId == "Image")
+                {
+                    <img class="mediatracker"
+                        src="/assets/tools/@Route/Images/@SelectedSkinId/Respawn@(RespawnRender == InputComponentRender.On ? "_On" : "").webp"
+                        style="@GetCssPos(ImageDesign.GetRespawnPos(Config)) @GetCssScale(ImageDesign.GetRespawnScale(Config) * (1, 1/3f))"
+                        @onmouseenter="() => RespawnRender = InputComponentRender.On"
+                        @onmouseleave="() => RespawnRender = InputComponentRender.Visible"/>
+                }
+                else if (SelectedDesignId is "Basic" or "Compact" or "Text")
+                {
+                    var color = Config.InactiveColor;
+
+                    <div class="mediatracker text"
+                         style="font-size: 1.5rem; transform: translate(-50%, -50%) scale(@(Config.RespawnScale.X.ToString(CultureInfo.InvariantCulture)), @(Config.RespawnScale.Y.ToString(CultureInfo.InvariantCulture)));color: rgb(@((int)(color.X * 255)), @((int)(color.Y * 255)), @((int)(color.Z * 255))); @GetCssPos(ImageDesign.GetRespawnPos(Config)) @GetCssScale(ImageDesign.GetRespawnScale(Config) * (1, 1/3f))">
+                        RESPAWN
+                    </div>
+                }
+            }
+
+            @if (Config.EnableSecondaryRespawn)
+            {
+                @if (SelectedDesignId == "Image")
+                {
+                    <img class="mediatracker"
+                        src="/assets/tools/@Route/Images/@SelectedSkinId/SecondaryRespawn@(SecondaryRespawnRender == InputComponentRender.On ? "_On" : "").webp"
+                        style="@GetCssPos(ImageDesign.GetSecondaryRespawnPos(Config)) @GetCssScale(ImageDesign.GetSecondaryRespawnScale(Config) * (1, 1/6f))"
+                        @onmouseenter="() => SecondaryRespawnRender = InputComponentRender.On"
+                        @onmouseleave="() => SecondaryRespawnRender = InputComponentRender.Visible"/>
+                }
+                else if (SelectedDesignId is "Basic" or "Compact" or "Text")
+                {
+                    var color = Config.InactiveColor;
+
+                    <div class="mediatracker text"
+                         style="font-size: 1.25rem; transform: translate(-50%, -50%) scale(@(Config.SecondaryRespawnScale.X.ToString(CultureInfo.InvariantCulture)), @(Config.SecondaryRespawnScale.Y.ToString(CultureInfo.InvariantCulture)));color: rgb(@((int)(color.X * 255)), @((int)(color.Y * 255)), @((int)(color.Z * 255))); @GetCssPos(ImageDesign.GetSecondaryRespawnPos(Config)) @GetCssScale(ImageDesign.GetSecondaryRespawnScale(Config) * (1, 1/6f))">
+                        SECONDARY RESPAWN
+                    </div>
+                }
+            }
+        }
+    </div>
+    <div class="scenes">
+        @foreach (var scene in Scenes)
+        {
+            <img src="_content/ClipInput.Client/img/scenes/@(scene)-small.webp" alt="@scene" @onclick="() => SelectedScene = scene" />
+        }
+    </div>
+    <div class="visualization-bar">
+        <button class="@(AnalogSteer ? "selected" : "")" @onclick="() => AnalogSteer = !AnalogSteer">Show analog steer</button>
+        <button class="@(AnalogAccel ? "selected" : "")" @onclick="() => AnalogAccel = !AnalogAccel">Show analog acceleration</button>
+        <button class="@(AnalogBrake ? "selected" : "")" @onclick="() => AnalogBrake = !AnalogBrake">Show analog brake</button>
+        <div class="links">
+            <ToolLinks GitHubAttribute="@GitHubAttribute" NoRectangle="true"></ToolLinks>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public ClipInputConfig? Config { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public string? SelectedDesignId { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public string? SelectedSkinId { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public string? Route { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public GbxToolAPI.ToolGitHubAttribute? GitHubAttribute { get; set; }
+
+    public string SelectedScene { get; set; } = "stadium";
+
+    public bool AnalogSteer { get; set; }
+    public bool AnalogAccel { get; set; }
+    public bool AnalogBrake { get; set; }
+
+    public InputComponentRender UpRender { get; set; }
+    public InputComponentRender DownRender { get; set; }
+    public InputComponentRender LeftRender { get; set; }
+    public InputComponentRender RightRender { get; set; }
+
+    public InputComponentRender JumpRender { get; set; }
+    public InputComponentRender HornRender { get; set; }
+    public InputComponentRender RespawnRender { get; set; }
+    public InputComponentRender SecondaryRespawnRender { get; set; }
+
+    public string[] Scenes { get; set; } = new[]
+    {
+        "stadium",
+        "desert",
+        "snow",
+        "rally",
+        "island",
+        "bay",
+        "coast",
+        "canyon",
+        "stadium2",
+        "valley",
+        "lagoon",
+        "storm",
+        "stadium2020"
+    };
+
+    public InputComponentRender[] PressedActionKeys { get; } = new InputComponentRender[10];
+
+    public bool MouseLeftClick { get; set; }
+    public bool MouseRightClick { get; set; }
+
+    private static Vec2 GetDigitalSteerPos(ClipInputConfig config, bool left)
+    {
+        return (config.DigitalSteerPos + new Vec2((config.DigitalSteerSpacing.X + config.DigitalSteerSize.X * 0.5f) * (left ? -1 : 1) * config.GetAspectRatio(), config.DigitalSteerSize.Y * 0.5f)) * config.PrimaryScale + config.PrimaryPos;
+    }
+
+    private string GetCssPercentage(float val)
+    {
+        return (val * 100).ToString(CultureInfo.InvariantCulture);
+    }
+
+    private string GetCssPos(Vec2 pos)
+    {
+        return $"left: {GetCssPercentage(-pos.X * 0.5f + 0.5f)}%; top: {GetCssPercentage(-pos.Y * 0.5f + 0.5f)}%;";
+    }
+
+    private string GetCssScale(Vec2 scale)
+    {
+        return $"width: {GetCssPercentage(scale.X * 0.25f)}%; height: {GetCssPercentage(scale.Y * 0.25f)}%;";
+    }
+
+    private void MouseClickOnMouse(MouseEventArgs args, bool clicked)
+    {
+        switch (args.Button)
+        {
+            case 0: MouseLeftClick = clicked; break;
+            case 2: MouseRightClick = clicked; break;
+        }
+    }
+
+    private string GetMouseVisualSuffix()
+    {
+        if (MouseLeftClick && MouseRightClick)
+        {
+            return "_Both";
+        }
+
+        if (MouseLeftClick)
+        {
+            return "_Left";
+        }
+
+        if (MouseRightClick)
+        {
+            return "_Right";
+        }
+
+        return "";
+    }
+
+    public void Refresh()
+    {
+        StateHasChanged();
+    }
+}

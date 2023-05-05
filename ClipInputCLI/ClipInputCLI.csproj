@@ -1,45 +1,44 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<Product>Clip Input CLI</Product>
-		<AssemblyTitle>Clip Input CLI</AssemblyTitle>
+		<Product>Clip Input 2 CLI</Product>
+		<AssemblyTitle>Clip Input 2 CLI</AssemblyTitle>
 		<Authors>Petr 'BigBang1112' Pivoňka</Authors>
 		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
-		<Version>1.2.0-rc</Version>
+		<Version>2.0.0</Version>
+	</PropertyGroup>
 
+	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net5.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PublishSingleFile>true</PublishSingleFile>
+		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+		<!-- full will come with code generation -->
+		<TrimMode>partial</TrimMode>
+		<PublishTrimmed>true</PublishTrimmed>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-		<PackageReference Include="YamlDotNet" Version="11.1.1" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\ClipInput\ClipInput.csproj" />
+		<ProjectReference Include="..\GbxToolAPI\Src\GbxToolAPI.CLI\GbxToolAPI.CLI.csproj"/>
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="Config.Default.yml">
+		<None Update="LICENSE">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Config.yml">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Export.Default.yml">
+		<None Update="UpdateAssets.bat">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Reference.txt">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Inputs\*">
+		<None Update="UpdateAssets.sh">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-
-		<Content Include="..\LICENSE">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
 	</ItemGroup>
 
 </Project>

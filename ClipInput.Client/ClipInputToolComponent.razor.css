@@ -1,0 +1,52 @@
+﻿.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 0 auto;
+    min-height: calc(100vh - 160px);
+    padding: 0 20px;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+h2 {
+    margin: 20px 0 10px 0;
+    font-size: 3rem;
+}
+
+h3 {
+    text-align: center;
+}
+
+.designs {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+    .designs > button {
+        display: flex;
+        width: 100%;
+        font-size: 1.4rem;
+        font-weight: bold;
+    }
+
+        .designs > button > div {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+            .designs > button > div > span {
+                font-size: 0.8rem;
+                color: yellow;
+            }
+
+.column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 410px;
+}

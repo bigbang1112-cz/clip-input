@@ -1,0 +1,7 @@
+﻿Name: LoveTAS
+DisplayName: I love to TAS
+
+AccelColor: [0, 1, 0, 1]
+BrakeColor: [1, 0, 0, 1]
+SteerColor: [1, 0.66, 0.16, 1]
+InactiveColor: [0.9, 0.9, 0.9, 0.9]
