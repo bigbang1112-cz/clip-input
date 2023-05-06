@@ -1,6 +1,7 @@
 ﻿using ClipInput.Builders;
 using ClipInput.Skins;
 using GBX.NET.Engines.Game;
+using GBX.NET.Inputs;
 using GbxToolAPI;
 using TmEssentials;
 
@@ -156,6 +157,16 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
         var inputs = replay?.Inputs ?? ghost.Inputs;
         var inputEndTime = replay?.EventsDuration ?? ghost.Object?.EventsDuration;
 
+        var fakeIsRaceRunning = inputs.OfType<FakeIsRaceRunning>().FirstOrDefault();
+
+        if (fakeIsRaceRunning.Time == new TimeInt32(ushort.MaxValue))
+        {
+            foreach (var input in inputs)
+            {
+                input.GetType().GetProperty(nameof(IInput.Time))!.SetValue(input, input.Time - fakeIsRaceRunning.Time);
+            }
+        }
+
         var inputTrackBuilder = new InputTrackBuilder(Config, tracks, inputs, endTime, inputEndTime > TimeInt32.Zero ? inputEndTime.Value : null);
 
         for (var i = 0; i < 2; i++)
@@ -213,6 +224,15 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
         inputTrackBuilder.Add<SecondaryRespawnBuilder>(Config.Dictionary.MediaTrackerTrackSecondaryRespawn);
 
         inputTrackBuilder.AddActionKeys(ghost.Object?.PlayerInputs?.FirstOrDefault()?.Version);
+
+        if (fakeIsRaceRunning.Time == new TimeInt32(ushort.MaxValue))
+        {
+            foreach (var input in inputs)
+            {
+                // "Fix" for the mutation
+                input.GetType().GetProperty(nameof(IInput.Time))!.SetValue(input, input.Time + fakeIsRaceRunning.Time);
+            }
+        }
     }
 
     private bool IsManiaPlanet()
