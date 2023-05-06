@@ -146,7 +146,7 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
         var author = firstGhost?.GhostNickname ?? firstGhost?.GhostLogin ?? "unnamed";
 
         var pureFileName = $"ClipInput2_{TextFormatter.Deformat(mapName)}_{time}_{TextFormatter.Deformat(author)}.Clip.Gbx";
-        var validFileName = RegexUtils.GetExtendedAsciiValid(pureFileName);
+        var validFileName = string.Join("_", RegexUtils.GetExtendedAsciiValid(pureFileName).Split(Path.GetInvalidFileNameChars()));
 
         var dir = forManiaPlanet ? "Replays/Clips/ClipInput2" : "Tracks/ClipInput2";
 
