@@ -21,7 +21,7 @@ class ActionKeyBuilder : BlockBuilder
         this.newActionKeyLayout = newActionKeyLayout;
     }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {        
         var earliestInputTime = GetFirstInputTime();
 
@@ -61,9 +61,9 @@ class ActionKeyBuilder : BlockBuilder
             block = newBlockInstance;
         }
 
-        if (endTime.HasValue)
+        if (blockEndTime.HasValue)
         {
-            CloseState(block, endTime.Value);
+            CloseState(block, blockEndTime.Value);
             
             yield return block;
         }

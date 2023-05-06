@@ -1,7 +1,9 @@
 ﻿using ClipInput.Builders;
 using ClipInput.Skins;
 using GBX.NET.Engines.Game;
+using GBX.NET.Inputs;
 using GbxToolAPI;
+using System.Text.RegularExpressions;
 using TmEssentials;
 
 namespace ClipInput;
@@ -82,7 +84,7 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
 
         foreach (var ghost in ghosts)
         {
-            var time = GetEndTime(ghost);
+            var time = GetBlockEndTime(ghost);
 
             if (longestTime is null || time > longestTime)
             {
@@ -144,7 +146,7 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
         var author = firstGhost?.GhostNickname ?? firstGhost?.GhostLogin ?? "unnamed";
 
         var pureFileName = $"ClipInput2_{TextFormatter.Deformat(mapName)}_{time}_{TextFormatter.Deformat(author)}.Clip.Gbx";
-        var validFileName = string.Join("_", pureFileName.Split(Path.GetInvalidFileNameChars()));
+        var validFileName = RegexUtils.GetExtendedAsciiValid(pureFileName);
 
         var dir = forManiaPlanet ? "Replays/Clips/ClipInput2" : "Tracks/ClipInput2";
 
@@ -153,7 +155,20 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
 
     private void GenerateGhostInputs(IList<CGameCtnMediaTrack> tracks, Ghost ghost)
     {
-        var inputTrackBuilder = new InputTrackBuilder(Config, tracks, ghost.Inputs, endTime);
+        var inputs = replay?.Inputs ?? ghost.Inputs;
+        var inputEndTime = replay?.EventsDuration ?? ghost.Object?.EventsDuration;
+
+        var fakeIsRaceRunning = inputs.OfType<FakeIsRaceRunning>().FirstOrDefault();
+
+        if (fakeIsRaceRunning.Time == new TimeInt32(ushort.MaxValue))
+        {
+            foreach (var input in inputs)
+            {
+                input.GetType().GetProperty(nameof(IInput.Time))!.SetValue(input, input.Time - fakeIsRaceRunning.Time);
+            }
+        }
+
+        var inputTrackBuilder = new InputTrackBuilder(Config, tracks, inputs, endTime, inputEndTime > TimeInt32.Zero ? inputEndTime.Value : null);
 
         for (var i = 0; i < 2; i++)
         {
@@ -210,6 +225,15 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
         inputTrackBuilder.Add<SecondaryRespawnBuilder>(Config.Dictionary.MediaTrackerTrackSecondaryRespawn);
 
         inputTrackBuilder.AddActionKeys(ghost.Object?.PlayerInputs?.FirstOrDefault()?.Version);
+
+        if (fakeIsRaceRunning.Time == new TimeInt32(ushort.MaxValue))
+        {
+            foreach (var input in inputs)
+            {
+                // "Fix" for the mutation
+                input.GetType().GetProperty(nameof(IInput.Time))!.SetValue(input, input.Time + fakeIsRaceRunning.Time);
+            }
+        }
     }
 
     private bool IsManiaPlanet()
@@ -238,7 +262,7 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
         return forManiaPlanet;
     }
 
-    private static TimeInt32? GetEndTime(CGameCtnGhost ghost)
+    private static TimeInt32? GetBlockEndTime(CGameCtnGhost ghost)
     {
         var smEndTime = ghost.RecordData?.End;
 

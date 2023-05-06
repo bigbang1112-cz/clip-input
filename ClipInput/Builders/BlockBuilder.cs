@@ -17,7 +17,7 @@ abstract class BlockBuilder
         this.config = config;
     }
 
-    public abstract IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime);
+    public abstract IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime);
 
     protected TimeSingle GetFirstInputTime()
     {

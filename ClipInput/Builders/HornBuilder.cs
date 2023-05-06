@@ -15,7 +15,7 @@ class HornBuilder : BlockBuilder
         this.config = config;
     }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         var isOneTickHorn = true;
 
@@ -34,7 +34,7 @@ class HornBuilder : BlockBuilder
 
         BlockBuilder builder = isOneTickHorn ? new HornTapBuilder(inputs, config) : new HornPressBuilder(inputs, config);
 
-        foreach (var block in builder.BuildBlocks(endTime))
+        foreach (var block in builder.BuildBlocks(blockEndTime, inputEndTime))
         {
             yield return block;
         }

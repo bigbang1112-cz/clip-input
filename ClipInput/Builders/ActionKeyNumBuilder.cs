@@ -21,11 +21,11 @@ class ActionKeyNumBuilder : BlockBuilder
         this.newActionKeyLayout = newActionKeyLayout;
     }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         var earliestInputTime = GetFirstInputTime();
 
-        var block = config.Design.InitiateActionSlotNum(earliestInputTime, endTime ?? inputs.Last().Time, index);
+        var block = config.Design.InitiateActionSlotNum(earliestInputTime, blockEndTime ?? inputs.Last().Time, index);
 
         if (block is not null)
         {

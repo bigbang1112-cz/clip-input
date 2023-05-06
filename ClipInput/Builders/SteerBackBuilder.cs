@@ -18,7 +18,7 @@ class SteerBackBuilder : SteerBuilderBase
         left = design.IsLeftSteer().GetValueOrDefault();
     }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         var analogOnly = IsSteeringAnalogOnly();
         var keyboardOnly = analogOnly && IsAnalogSteeringKeyboardOnly();
@@ -72,9 +72,9 @@ class SteerBackBuilder : SteerBuilderBase
             block = newBlockInstance;
         }
 
-        if (block is not null && endTime.HasValue)
+        if (block is not null && blockEndTime.HasValue)
         {
-            CloseState(block, endTime.Value);
+            CloseState(block, blockEndTime.Value);
 
             yield return block;
         }

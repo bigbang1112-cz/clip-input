@@ -17,7 +17,7 @@ abstract class GasBackBuilder<TDigital, TAnalog> : GasBuilderBase<TDigital, TAna
     
     protected abstract CGameCtnMediaBlock? InitiateAnalog(TimeSingle time);
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         var analogOnly = IsAnalogOnly();
         var digitalOnly = analogOnly && IsAnalogGasDigitalOnly();
@@ -78,9 +78,9 @@ abstract class GasBackBuilder<TDigital, TAnalog> : GasBuilderBase<TDigital, TAna
             block = newBlockInstance;
         }
 
-        if (block is not null && endTime.HasValue)
+        if (block is not null && blockEndTime.HasValue)
         {
-            CloseState(block, endTime.Value);
+            CloseState(block, blockEndTime.Value);
 
             //AnimateClosePad(accelBlock, endTime.Value); apply only if there are no input within animation time and ghost state is longer
 

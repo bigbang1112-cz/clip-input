@@ -18,7 +18,7 @@ abstract class GenericKeyBuilder<T> : BlockBuilder where T : IInputState
         this.config = config;
     }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         if (!Enable || !inputs.OfType<T>().Any(x => x.Pressed))
         {
@@ -39,7 +39,7 @@ abstract class GenericKeyBuilder<T> : BlockBuilder where T : IInputState
             {
                 newBlockInstance = Apply(block, keyInput, prevTime);
             }
-            else if (input is FakeFinishLine)
+            else if (input.Time == inputEndTime && input is FakeFinishLine)
             {
                 newBlockInstance = Apply(block, input.Time, false, prevTime);
             }
@@ -60,9 +60,9 @@ abstract class GenericKeyBuilder<T> : BlockBuilder where T : IInputState
             block = newBlockInstance;
         }
 
-        if (endTime.HasValue)
+        if (blockEndTime.HasValue)
         {
-            CloseState(block, endTime.Value);
+            CloseState(block, blockEndTime.Value);
 
             yield return block;
         }

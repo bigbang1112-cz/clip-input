@@ -19,7 +19,7 @@ abstract class GasBuilder<TDigital, TAnalog> : GasBuilderBase<TDigital, TAnalog>
     protected abstract CGameCtnMediaBlock InitiateDigital(TimeSingle time, bool pressed);
     protected abstract void ApplyAnalog(CGameCtnMediaBlock block, TimeInt32 time, float value);
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         if (IsCharacter())
         {
@@ -77,7 +77,7 @@ abstract class GasBuilder<TDigital, TAnalog> : GasBuilderBase<TDigital, TAnalog>
                 _ => null
             };
 
-            if (input is FakeFinishLine) // End of race input reset
+            if (input.Time == inputEndTime && input is FakeFinishLine) // End of race input reset
             {
                 newBlockInstance = prevDevice switch
                 {
@@ -110,9 +110,9 @@ abstract class GasBuilder<TDigital, TAnalog> : GasBuilderBase<TDigital, TAnalog>
             block = newBlockInstance;
         }
 
-        if (endTime.HasValue)
+        if (blockEndTime.HasValue)
         {
-            CloseState(block, endTime.Value);
+            CloseState(block, blockEndTime.Value);
 
             //AnimateClosePad(accelBlock, endTime.Value); apply only if there are no input within animation time and ghost state is longer
 

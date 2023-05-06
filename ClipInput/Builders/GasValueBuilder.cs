@@ -22,7 +22,7 @@ abstract class GasValueBuilder<TDigital, TAnalog> : GasBuilderBase<TDigital, TAn
     protected abstract Vec2 AnalogValueScale { get; }
     protected abstract Vec3 AnalogValueColor { get; }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         var analogOnly = IsAnalogOnly();
         var digitalOnly = analogOnly && IsAnalogGasDigitalOnly();
@@ -42,7 +42,7 @@ abstract class GasValueBuilder<TDigital, TAnalog> : GasBuilderBase<TDigital, TAn
             ? null
             : InitiateAnalog(earliestInputTime + config.StartOffset, value: 0);
 
-        var isPrevDigital = false;
+        var isPrevDigital = startsWithDigital;
 
         foreach (var input in inputs)
         {
@@ -65,7 +65,7 @@ abstract class GasValueBuilder<TDigital, TAnalog> : GasBuilderBase<TDigital, TAn
                 continue;
             }
 
-            if (input is FakeFinishLine && !isPrevDigital) // End of race input reset
+            if (input.Time == inputEndTime && input is FakeFinishLine && !isPrevDigital) // End of race input reset
             {
                 var zeroingInstance = ApplyAnalog(block, new Gas(input.Time, 0));
 
@@ -101,9 +101,9 @@ abstract class GasValueBuilder<TDigital, TAnalog> : GasBuilderBase<TDigital, TAn
             block = newBlockInstance;
         }
 
-        if (block is not null && endTime.HasValue)
+        if (block is not null && blockEndTime.HasValue)
         {
-            CloseState(block, endTime.Value);
+            CloseState(block, blockEndTime.Value);
 
             yield return block;
         }

@@ -16,7 +16,7 @@ class MouseBuilder : BlockBuilder
         this.config = config;
     }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         if (!config.EnableMouse || !IncludesMouse())
         {
@@ -92,9 +92,9 @@ class MouseBuilder : BlockBuilder
             prevMouseAccu = mouseAccu;
         }
 
-        if (endTime.HasValue)
+        if (blockEndTime.HasValue)
         {
-            CloseState(block, endTime.Value);
+            CloseState(block, blockEndTime.Value);
         }
 
         yield return block;

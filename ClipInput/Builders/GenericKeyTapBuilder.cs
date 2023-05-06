@@ -20,7 +20,7 @@ abstract class GenericKeyTapBuilder<T> : BlockBuilder where T : struct, IInput
         this.config = config;
     }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         if (!Enable || !inputs.OfType<T>().Any())
         {
@@ -88,9 +88,9 @@ abstract class GenericKeyTapBuilder<T> : BlockBuilder where T : struct, IInput
         CloseState(lastReleasedBlock, lastPressEnd);
         lastReleasedEffect.Keys.First().Opacity = 0;
 
-        if (endTime.HasValue)
+        if (blockEndTime.HasValue)
         {
-            CloseState(lastReleasedBlock, endTime.Value);
+            CloseState(lastReleasedBlock, blockEndTime.Value);
         }
 
         yield return lastReleasedBlock;

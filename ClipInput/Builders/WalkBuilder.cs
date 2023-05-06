@@ -19,7 +19,7 @@ abstract class WalkBuilder : BlockBuilder
 
     protected abstract CGameCtnMediaBlock Initiate(TimeSingle time, bool pressed);
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         if (!inputs.OfType<Walk>().Any())
         {
@@ -57,9 +57,9 @@ abstract class WalkBuilder : BlockBuilder
             block = newBlockInstance;
         }
 
-        if (endTime.HasValue)
+        if (blockEndTime.HasValue)
         {
-            CloseState(block, endTime.Value);
+            CloseState(block, blockEndTime.Value);
 
             //AnimateClosePad(accelBlock, endTime.Value); apply only if there are no input within animation time and ghost state is longer
 
