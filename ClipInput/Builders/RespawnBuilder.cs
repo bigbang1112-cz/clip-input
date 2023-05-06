@@ -15,13 +15,13 @@ class RespawnBuilder : BlockBuilder
         this.config = config;
     }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         var isOneTickHorn = inputs.OfType<RespawnTM2020>().Any();
 
         BlockBuilder builder = isOneTickHorn ? new RespawnTapBuilder(inputs, config) : new RespawnPressBuilder(inputs, config);
 
-        foreach (var block in builder.BuildBlocks(endTime))
+        foreach (var block in builder.BuildBlocks(blockEndTime, inputEndTime))
         {
             yield return block;
         }

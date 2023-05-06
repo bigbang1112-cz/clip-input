@@ -18,7 +18,7 @@ class StrafeBuilder : BlockBuilder
         pressedState = config.Design.IsLeftSteer().GetValueOrDefault() ? EStrafe.Left : EStrafe.Right;
     }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         if (!inputs.OfType<Strafe>().Any())
         {
@@ -56,9 +56,9 @@ class StrafeBuilder : BlockBuilder
             block = newBlockInstance;
         }
 
-        if (endTime.HasValue)
+        if (blockEndTime.HasValue)
         {
-            CloseState(block, endTime.Value);
+            CloseState(block, blockEndTime.Value);
 
             //AnimateClosePad(accelBlock, endTime.Value); apply only if there are no input within animation time and ghost state is longer
 

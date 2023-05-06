@@ -24,7 +24,7 @@ class SteerValueBuilder : SteerBuilderBase
         inverse = inputs.FirstOrDefault(x => x is FakeDontInverseAxis a && a.Pressed) is not null;
     }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         var analogOnly = IsSteeringAnalogOnly();
         var keyboardOnly = analogOnly && IsAnalogSteeringKeyboardOnly();
@@ -58,7 +58,7 @@ class SteerValueBuilder : SteerBuilderBase
                 continue;
             }
 
-            if (input is FakeFinishLine && prevSteerInput is IInputSteer) // End of race input reset
+            if (input.Time == inputEndTime && input is FakeFinishLine && prevSteerInput is IInputSteer) // End of race input reset
             {
                 var zeroingInstance = ApplyAnalogSteer(block, new Steer(input.Time, 0), isTransitionFromKb: prevSteerInput is SteerLeft or SteerRight, prevValue);
 
@@ -95,9 +95,9 @@ class SteerValueBuilder : SteerBuilderBase
             block = newBlockInstance;
         }
 
-        if (block is not null && endTime.HasValue)
+        if (block is not null && blockEndTime.HasValue)
         {
-            CloseState(block, endTime.Value);
+            CloseState(block, blockEndTime.Value);
 
             yield return block;
         }

@@ -25,7 +25,7 @@ class SteerBuilder : SteerBuilderBase
         inverse = inputs.FirstOrDefault(x => x is FakeDontInverseAxis a && a.Pressed) is not null;
     }
 
-    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? endTime)
+    public override IEnumerable<CGameCtnMediaBlock> BuildBlocks(TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         if (IsCharacter())
         {
@@ -57,7 +57,7 @@ class SteerBuilder : SteerBuilderBase
                 _ => null
             };
 
-            if (input is FakeFinishLine) // End of race input reset
+            if (input.Time == inputEndTime && input is FakeFinishLine) // End of race input reset
             {
                 newBlockInstance = prevDevice switch
                 {
@@ -91,9 +91,9 @@ class SteerBuilder : SteerBuilderBase
             steerBlock = newBlockInstance;
         }
 
-        if (endTime.HasValue)
+        if (blockEndTime.HasValue)
         {
-            CloseState(steerBlock, endTime.Value);
+            CloseState(steerBlock, blockEndTime.Value);
 
             //AnimateClosePad(steerBlock, end.Value); apply only if there are no input within animation time and ghost state is longer
 

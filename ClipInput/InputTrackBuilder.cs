@@ -11,21 +11,23 @@ internal class InputTrackBuilder
     private readonly ClipInputConfig config;
     private readonly IList<CGameCtnMediaTrack> tracks;
     private readonly IReadOnlyCollection<IInput> inputs;
-    private readonly TimeInt32? endTime;
+    private readonly TimeInt32? blockEndTime;
+    private readonly TimeInt32? inputEndTime;
 
-    public InputTrackBuilder(ClipInputConfig config, IList<CGameCtnMediaTrack> tracks, IReadOnlyCollection<IInput> inputs, TimeInt32? endTime)
+    public InputTrackBuilder(ClipInputConfig config, IList<CGameCtnMediaTrack> tracks, IReadOnlyCollection<IInput> inputs, TimeInt32? blockEndTime, TimeInt32? inputEndTime)
     {
         this.config = config;
         this.tracks = tracks;
         this.inputs = inputs;
-        this.endTime = endTime;
+        this.blockEndTime = blockEndTime;
+        this.inputEndTime = inputEndTime;
     }
 
     public void Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(string trackName) where T : BlockBuilder
     {
         var builder = (T)Activator.CreateInstance(typeof(T), inputs, config)!;
 
-        var blocks = builder.BuildBlocks(endTime).ToList();
+        var blocks = builder.BuildBlocks(blockEndTime, inputEndTime).ToList();
 
         if (blocks.Count > 0)
         {
@@ -69,13 +71,13 @@ internal class InputTrackBuilder
             var num = (i + 1) % 10;
 
             var blocksNum = new ActionKeyNumBuilder(inputs, config, i, newActionKeyLayout: !hasOldActionKeys)
-                .BuildBlocks(endTime)
+                .BuildBlocks(blockEndTime, inputEndTime)
                 .ToList();
 
             yield return CreateTrack(string.Format(config.Dictionary.MediaTrackerTrackActionKeyOverlay, num), blocksNum);
 
             var blocks = new ActionKeyBuilder(inputs, config, i, isShootMania, newActionKeyLayout: !hasOldActionKeys)
-                .BuildBlocks(endTime)
+                .BuildBlocks(blockEndTime, inputEndTime)
                 .ToList();
 
             yield return CreateTrack(string.Format(config.Dictionary.MediaTrackerTrackActionKey, num), blocks);
