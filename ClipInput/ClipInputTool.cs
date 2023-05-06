@@ -3,6 +3,7 @@ using ClipInput.Skins;
 using GBX.NET.Engines.Game;
 using GBX.NET.Inputs;
 using GbxToolAPI;
+using System.Text.RegularExpressions;
 using TmEssentials;
 
 namespace ClipInput;
@@ -145,7 +146,7 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
         var author = firstGhost?.GhostNickname ?? firstGhost?.GhostLogin ?? "unnamed";
 
         var pureFileName = $"ClipInput2_{TextFormatter.Deformat(mapName)}_{time}_{TextFormatter.Deformat(author)}.Clip.Gbx";
-        var validFileName = string.Join("_", pureFileName.Split(Path.GetInvalidFileNameChars()));
+        var validFileName = RegexUtils.GetExtendedAsciiValid(pureFileName);
 
         var dir = forManiaPlanet ? "Replays/Clips/ClipInput2" : "Tracks/ClipInput2";
 
