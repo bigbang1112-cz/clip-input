@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
 	<PropertyGroup>
 		<Version>2.0.2</Version>
@@ -15,10 +15,13 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.5" />
 	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="GbxToolAPI.Client" Version="1.0.0" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\ClipInput\ClipInput.csproj" />
-		<ProjectReference Include="..\GbxToolAPI\Src\GbxToolAPI.Client\GbxToolAPI.Client.csproj" />
 	</ItemGroup>
 
 </Project>
