@@ -20,7 +20,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\GbxToolAPI\Src\GbxToolAPI\GbxToolAPI.csproj" />
+	  <PackageReference Include="GbxToolAPI" Version="1.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>

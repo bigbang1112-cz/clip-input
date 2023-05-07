@@ -25,8 +25,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="GbxToolAPI.CLI" Version="1.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\ClipInput\ClipInput.csproj" />
-		<ProjectReference Include="..\GbxToolAPI\Src\GbxToolAPI.CLI\GbxToolAPI.CLI.csproj"/>
 	</ItemGroup>
 
 	<ItemGroup>
