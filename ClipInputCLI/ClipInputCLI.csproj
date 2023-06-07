@@ -5,7 +5,7 @@
 		<AssemblyTitle>Clip Input 2 CLI</AssemblyTitle>
 		<Authors>Petr 'BigBang1112' Pivoňka</Authors>
 		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
-		<Version>2.0.3</Version>
+		<Version>2.0.4</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -18,7 +18,8 @@
 	<PropertyGroup>
 		<PublishSingleFile>true</PublishSingleFile>
 		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-
+		<SelfContained>true</SelfContained>
+		
 		<!-- full will come with code generation -->
 		<TrimMode>partial</TrimMode>
 		<PublishTrimmed>true</PublishTrimmed>

@@ -2,78 +2,126 @@ name: Publish CLI
 
 on:
   release:
-    types: [ published ]
+    types: [published]
+
+env:
+  PROJECT_NAME: ClipInputCLI
+  ARTIFACT_NAME: artifact
+  
+permissions:
+  contents: write # important for release description edit and asset upload
+  packages: read
 
 jobs:
-  build:
-
-    strategy:
-      matrix:
-        os: [ { os: windows-latest, runtime: win-x64 }, { os: ubuntu-latest, runtime: linux-x64 } ]
-
-    runs-on: ${{ matrix.os.os }}
+  prepare-description:
+    runs-on: ubuntu-latest
+    name: Set release description
     
-    name: Publish on ${{ matrix.os.os }}
-
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 7.0.x
-        
-    - name: Add GitHub NuGet source
-      run: dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/bigbang1112-cz/index.json"
-    
-    - name: Restore dependencies
-      run: dotnet restore
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
       
-    - name: Publish ${{ matrix.os.runtime }}
-      run: dotnet publish ClipInputCLI -c Release -f net7.0 -r ${{ matrix.os.runtime }} -o build/ClipInputCLI-${{ matrix.os.runtime }} -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:PublishTrimmed=true --self-contained
+      - name: Set release information
+        run: gh release edit ${{ github.ref_name }} -n "$(echo -e '### *[Release is being automatically created, please wait...](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*\n\n${{ github.event.release.body }}')"
     
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v3.1.0
-      with:
-        name: build
-        path: build
-        
-  publish:
-    needs: build
-
+  build:
+    needs: prepare-description
+    
     strategy:
       matrix:
-        os: [ { os: windows-latest, runtime: win-x64 }, { os: ubuntu-latest, runtime: linux-x64 } ]
+        os: [{ os: windows-latest, runtime: win-x64 }, { os: windows-latest, runtime: win-x86 }, { os: ubuntu-latest, runtime: linux-x64 }]
 
     runs-on: ${{ matrix.os.os }}
+    name: Publish with ${{ matrix.os.os }} (${{ matrix.os.runtime }})
+    
+    env:
+      ZIP_SUFFIX: -${{ matrix.os.runtime }}.${{ github.ref_name }}.zip
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0.x
+          
+      - name: Add GitHub NuGet source
+        run: dotnet nuget add source --username USERNAME --password ${{ env.GH_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/bigbang1112-cz/index.json"
+    
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Publish ${{ matrix.os.runtime }}
+        run: dotnet publish ${{ env.PROJECT_NAME }}
+          -c Release
+          -r ${{ matrix.os.runtime }}
+          -o build/${{ env.PROJECT_NAME }}-${{ matrix.os.runtime }}
+          -p:PublishSingleFile=true
+          -p:EnableCompressionInSingleFile=true
+          -p:PublishTrimmed=true
+          -p:TrimMode=partial
+          --self-contained
+          
+      - name: Zip to ${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }}
+        uses: thedoctor0/zip-release@main
+        with:
+          directory: build
+          path: ${{ env.PROJECT_NAME }}-${{ matrix.os.runtime }}
+          filename: ../${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }}
+
+      - name: Calculate SHA256 (Windows)
+        if: matrix.os.os == 'windows-latest'
+        run: |
+          $hash = Get-FileHash -Path '${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }}' -Algorithm SHA256
+          $hashValue = $hash.Hash.ToLower()
+          Write-Host $hashValue
+          $hashValue | Out-File -FilePath "${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }}.hash.txt"
+
+      - name: Calculate SHA256 (Linux)
+        if: matrix.os.os == 'ubuntu-latest'
+        run: |
+          sha256sum "${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }}" | awk '{print $1}' | tee >(cat) > ${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }}.hash.txt
+
+      - name: Upload ${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }} to this release
+        run: gh release upload ${{ github.ref_name }} ${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }}
+        
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }}.hash.txt
+          if-no-files-found: error
+  
+  finalize-description:
+    needs: build
+    
+    runs-on: ubuntu-latest
+    name: Finalize release description
+    
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     steps:
-    - name: Download a Build Artifact
-      uses: actions/download-artifact@v3.0.0
-      with:
-        name: build
-        
-    - name: Zip to ClipInputCLI-${{ matrix.os.runtime }}.${{ github.ref_name }}.zip
-      uses: thedoctor0/zip-release@main
-      with:
-        path: ClipInputCLI-${{ matrix.os.runtime }}
-        filename: ClipInputCLI-${{ matrix.os.runtime }}.${{ github.ref_name }}.zip
+      - uses: actions/checkout@v3
+      
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v2.1.1
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+      
+      - name: Read hash files
+        run: |
+          echo "HashLinuxX64=$(tr -d '\r' < ${{ env.PROJECT_NAME }}-linux-x64.${{ github.ref_name }}.zip.hash.txt)" >> $GITHUB_ENV
+          echo "HashWinX64=$(tr -d '\r' < ${{ env.PROJECT_NAME }}-win-x64.${{ github.ref_name }}.zip.hash.txt)" >> $GITHUB_ENV
+          echo "HashWinX86=$(tr -d '\r' < ${{ env.PROJECT_NAME }}-win-x86.${{ github.ref_name }}.zip.hash.txt)" >> $GITHUB_ENV
+      
+      - name: Set release information
+        run: gh release edit ${{ github.ref_name }} -n "$(echo -e '${{ github.event.release.body }}\n\n**SHA256 win-x64** `${{ env.HashWinX64 }}`\n**SHA256 win-x86** `${{ env.HashWinX86 }}`\n**SHA256 linux-x64** `${{ env.HashLinuxX64 }}`\n\nAssets were automatically generated using the [publish workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).')"
     
-    - name: SHA256 checksum
-      uses: Huy-Ngo/gha-sha@v1.1.0
-      with:
-        glob: ClipInputCLI-${{ matrix.os.runtime }}.${{ github.ref_name }}.zip
-    
-    - name: Upload ClipInputCLI-${{ matrix.os.runtime }}.${{ github.ref_name }}.zip to latest release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ClipInputCLI-${{ matrix.os.runtime }}.${{ github.ref_name }}.zip
-        tag: ${{ github.ref }}
-        overwrite: true
-        body: |
-          ${{ github.event.release.body }}
-          
-          The ZIP was automatically generated using the [publish workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).
