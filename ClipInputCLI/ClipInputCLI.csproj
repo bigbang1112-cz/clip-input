@@ -18,7 +18,8 @@
 	<PropertyGroup>
 		<PublishSingleFile>true</PublishSingleFile>
 		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-
+		<SelfContained>true</SelfContained>
+		
 		<!-- full will come with code generation -->
 		<TrimMode>partial</TrimMode>
 		<PublishTrimmed>true</PublishTrimmed>
