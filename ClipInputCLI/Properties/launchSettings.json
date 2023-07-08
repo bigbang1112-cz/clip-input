@@ -1,8 +1,7 @@
 {
   "profiles": {
     "ClipInputCLI": {
-      "commandName": "Project",
-      "commandLineArgs": "\"E:\\Downloads\\ronney_Worlds_demise.Replay.Gbx\""
+      "commandName": "Project"
     }
   }
 }
