@@ -160,12 +160,9 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
 
         var fakeIsRaceRunning = inputs.OfType<FakeIsRaceRunning>().FirstOrDefault();
 
-        if (fakeIsRaceRunning.Time == new TimeInt32(ushort.MaxValue))
+        if (fakeIsRaceRunning.Time.TotalMilliseconds == ushort.MaxValue)
         {
-            foreach (var input in inputs)
-            {
-                input.GetType().GetProperty(nameof(IInput.Time))!.SetValue(input, input.Time - fakeIsRaceRunning.Time);
-            }
+            inputs = inputs.Select(input => input.WithTime(input.Time - fakeIsRaceRunning.Time)).ToList();
         }
 
         var inputTrackBuilder = new InputTrackBuilder(Config, tracks, inputs, endTime, inputEndTime > TimeInt32.Zero ? inputEndTime.Value : null);
