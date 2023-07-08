@@ -222,15 +222,6 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
         inputTrackBuilder.Add<SecondaryRespawnBuilder>(Config.Dictionary.MediaTrackerTrackSecondaryRespawn);
 
         inputTrackBuilder.AddActionKeys(ghost.Object?.PlayerInputs?.FirstOrDefault()?.Version);
-
-        if (fakeIsRaceRunning.Time == new TimeInt32(ushort.MaxValue))
-        {
-            foreach (var input in inputs)
-            {
-                // "Fix" for the mutation
-                input.GetType().GetProperty(nameof(IInput.Time))!.SetValue(input, input.Time + fakeIsRaceRunning.Time);
-            }
-        }
     }
 
     private bool IsManiaPlanet()
