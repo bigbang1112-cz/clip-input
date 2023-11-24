@@ -1,0 +1,5 @@
+Name: White
+DisplayName: White
+
+AnalogAccelOffset: [0, 0.01]
+AnalogBrakeOffset: [0, 0.01]
