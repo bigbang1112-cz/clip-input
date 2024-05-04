@@ -48,6 +48,13 @@ Where can I import the outputted Clip.Gbx?
 
 As Trackmania Turbo still does not support images and triangles, a wild solution had to be made. The visualization is now purely generated with text! This can be enabled by selecting the Text design in web UI or by setting `DesignId: Text`.
 
+## Troubleshooting
+
+- Issue: The analog input is white instead of blue
+  - Solution: Analog input is made out of 2D triangles which become always white on PC2 shader quality. To fix this, **set the Shader Quality to at least PC3 Low**.
+- Issue: Some digital inputs aren't appearing in a rendered video
+  - Solution: The tap was so fast that it didn't fit inside the video framerate. Luckily this can be solved with `AdjustToFPS` setting which ensures that each activated state is at least 1/`FPS` seconds long.
+
 ## Settings
 
 Configuration can be managed on the website in the Config component or inside the `Config` folder.
