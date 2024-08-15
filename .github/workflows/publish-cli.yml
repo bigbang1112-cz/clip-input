@@ -114,7 +114,7 @@ jobs:
       - name: Download a Build Artifact
         uses: actions/download-artifact@v4
         with:
-          pattern: ${{ env.PROJECT_NAME }}-*
+          pattern: ${{ env.ARTIFACT_NAME }}-*
           merge-multiple: true
       
       - name: Read hash files
