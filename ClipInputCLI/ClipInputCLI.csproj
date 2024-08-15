@@ -5,12 +5,12 @@
 		<AssemblyTitle>Clip Input 2 CLI</AssemblyTitle>
 		<Authors>Petr 'BigBang1112' Pivoňka</Authors>
 		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
-		<Version>2.0.11</Version>
+		<Version>2.0.12</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
