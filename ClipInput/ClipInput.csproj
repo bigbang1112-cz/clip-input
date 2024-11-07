@@ -5,7 +5,7 @@
 		<AssemblyTitle>Clip Input 2</AssemblyTitle>
 		<Authors>Petr 'BigBang1112' Pivoňka</Authors>
 		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
-		<Version>2.0.12</Version>
+		<Version>2.0.13</Version>
 		<IsTrimmable>true</IsTrimmable>
 	</PropertyGroup>
 
@@ -21,6 +21,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="GBX.NET" Version="1.2.9" />
 	  <PackageReference Include="GbxToolAPI" Version="1.0.9" />
 	</ItemGroup>
 
