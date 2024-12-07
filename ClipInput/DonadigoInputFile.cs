@@ -1,5 +1,4 @@
 ﻿using GBX.NET.Inputs;
-using System.Globalization;
 using TmEssentials;
 
 namespace ClipInput;

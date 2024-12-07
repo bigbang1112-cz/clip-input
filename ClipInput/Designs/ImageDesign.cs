@@ -7,22 +7,22 @@ using TmEssentials;
 
 namespace ClipInput.Designs;
 
-public class ImageDesign : Design<ImageDesignSkin, CGameCtnMediaBlockImage, CControlEffectSimi.Key, CGameCtnMediaBlockTriangles, CGameCtnMediaBlockTriangles.Key>
+public class ImageDesign(ClipInputConfig config) : Design<ImageDesignSkin, CGameCtnMediaBlockImage, CControlEffectSimi.Key, CGameCtnMediaBlockTriangles, CGameCtnMediaBlockTriangles.Key>(config)
 {
-    private readonly ClipInputConfig config;
+    private readonly ClipInputConfig config = config;
 
-    private static readonly Int3[] gasTriangles = new[]
-    {
+    private static readonly Int3[] gasTriangles =
+    [
         new Int3(0, 1, 4),
         new Int3(1, 4, 5),
         new Int3(1, 2, 5),
         new Int3(2, 5, 6),
         new Int3(2, 3, 6),
         new Int3(3, 6, 7)
-    };
+    ];
 
-    private static readonly Int3[] padTriangles = new[]
-    {
+    private static readonly Int3[] padTriangles =
+    [
         new Int3(0, 1, 2),
         new Int3(1, 2, 3),
 
@@ -30,51 +30,40 @@ public class ImageDesign : Design<ImageDesignSkin, CGameCtnMediaBlockImage, CCon
         new Int3(3, 4, 5),
 
         new Int3(4, 5, 6),
-    };
+    ];
 
-    private readonly Vec4[] accelerateRealVertexColors;
-    private readonly Vec4[] brakeRealVertexColors;
-    private readonly Vec4[] padVertexColors;
-
-    public ImageDesign(ClipInputConfig config) : base(config)
-    {
-        this.config = config;
-
-        accelerateRealVertexColors = new[]
-        {
-            config.InactiveColor,
-            config.InactiveColor,
-            config.ActiveColor,
-            config.ActiveColor,
-            config.InactiveColor,
-            config.InactiveColor,
-            config.ActiveColor,
-            config.ActiveColor
-        };
-
-        brakeRealVertexColors = new[]
-        {
-            config.BrakeColor,
-            config.BrakeColor,
-            config.InactiveColor,
-            config.InactiveColor,
-            config.BrakeColor,
-            config.BrakeColor,
-            config.InactiveColor,
-            config.InactiveColor
-        };
-
-        padVertexColors = new[]
-        {
-            config.ActiveColor,
-            config.ActiveColor,
-            config.ActiveColor,
-            config.ActiveColor,
-            config.InactiveColor,
-            config.InactiveColor,
-            config.InactiveColor
-        };
-    }
+    private readonly Vec4[] accelerateRealVertexColors =
+    [
+        config.InactiveColor,
+        config.InactiveColor,
+        config.ActiveColor,
+        config.ActiveColor,
+        config.InactiveColor,
+        config.InactiveColor,
+        config.ActiveColor,
+        config.ActiveColor
+    ];
+    private readonly Vec4[] brakeRealVertexColors =
+    [
+        config.BrakeColor,
+        config.BrakeColor,
+        config.InactiveColor,
+        config.InactiveColor,
+        config.BrakeColor,
+        config.BrakeColor,
+        config.InactiveColor,
+        config.InactiveColor
+    ];
+    private readonly Vec4[] padVertexColors =
+    [
+        config.ActiveColor,
+        config.ActiveColor,
+        config.ActiveColor,
+        config.ActiveColor,
+        config.InactiveColor,
+        config.InactiveColor,
+        config.InactiveColor
+    ];
 
     public override void ApplyAnalogAccel(CGameCtnMediaBlockTriangles block, TimeSingle time, float value)
     {
@@ -265,8 +254,8 @@ public class ImageDesign : Design<ImageDesignSkin, CGameCtnMediaBlockImage, CCon
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstY, 0),
                 new Vec3(firstX, secondY, 0),
                 new Vec3(firstX, secondY, 0),
@@ -275,7 +264,7 @@ public class ImageDesign : Design<ImageDesignSkin, CGameCtnMediaBlockImage, CCon
                 new Vec3(secondX, secondY, 0),
                 new Vec3(secondX, secondY, 0),
                 new Vec3(secondX, thirdY, 0)
-            }
+            ]
         };
     }
 
@@ -310,8 +299,8 @@ public class ImageDesign : Design<ImageDesignSkin, CGameCtnMediaBlockImage, CCon
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstY, 0),
                 new Vec3(firstX, secondY, 0),
                 new Vec3(firstX, secondY, 0),
@@ -320,7 +309,7 @@ public class ImageDesign : Design<ImageDesignSkin, CGameCtnMediaBlockImage, CCon
                 new Vec3(secondX, secondY, 0),
                 new Vec3(secondX, secondY, 0),
                 new Vec3(secondX, thirdY, 0)
-            }
+            ]
         };
     }
 
@@ -395,8 +384,8 @@ public class ImageDesign : Design<ImageDesignSkin, CGameCtnMediaBlockImage, CCon
         return new CGameCtnMediaBlockTriangles.Key(node)
         {
             Time = time.ToTimeSingle() + config.StartOffset,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstTopY, 0),
                 new Vec3(firstX, firstBottomY, 0),
                 new Vec3(secondX, secondTopY, 0),
@@ -404,7 +393,7 @@ public class ImageDesign : Design<ImageDesignSkin, CGameCtnMediaBlockImage, CCon
                 new Vec3(secondX, secondTopY, 0),
                 new Vec3(secondX, secondBottomY, 0),
                 new Vec3(thirdX, thirdY, 0),
-            }
+            ]
         };
     }
 
@@ -604,7 +593,7 @@ public class ImageDesign : Design<ImageDesignSkin, CGameCtnMediaBlockImage, CCon
         block.Effect.Keys.Add(GetMouseKeyframe(block, time, curPos, offset));
     }
     
-    private CGameCtnMediaBlock InitiateGenericKey(string imageName, TimeSingle time, bool pressed, Vec2 position, Vec2 scale)
+    private CGameCtnMediaBlockImage InitiateGenericKey(string imageName, TimeSingle time, bool pressed, Vec2 position, Vec2 scale)
     {
         var effect = CControlEffectSimi.Create()
             .Centered()
@@ -657,7 +646,7 @@ public class ImageDesign : Design<ImageDesignSkin, CGameCtnMediaBlockImage, CCon
         return InitiateGenericKey("SecondaryRespawn", time, pressed, GetSecondaryRespawnPos(Config), GetSecondaryRespawnScale(Config));
     }
 
-    private readonly Dictionary<(string, bool, bool), FileRef> imageCache = new();
+    private readonly Dictionary<(string, bool, bool), FileRef> imageCache = [];
 
     private FileRef GetClipInputFileRef(string imageName, bool pressed = false, bool activated = false)
     {
