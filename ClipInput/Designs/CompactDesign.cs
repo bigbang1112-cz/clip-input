@@ -8,8 +8,8 @@ public class CompactDesign : BasicDesign
 {
     private readonly ClipInputConfig config;
 
-    private static readonly Int3[] padTriangles = new Int3[]
-    {
+    private static readonly Int3[] padTriangles =
+    [
         (0, 1, 4),
         (1, 2, 4),
 
@@ -20,12 +20,12 @@ public class CompactDesign : BasicDesign
 
         (3, 6, 7),
         (5, 6, 7)
-    };
+    ];
 
-    private static readonly Int3[] triangle = new Int3[] { (0, 1, 2) };
+    private static readonly Int3[] triangle = [(0, 1, 2)];
     
-    private static readonly Int3[] gasTriangles = new Int3[]
-    {
+    private static readonly Int3[] gasTriangles =
+    [
         (0, 2, 3),
         (1, 0, 3),
         (1, 4, 3),
@@ -35,9 +35,9 @@ public class CompactDesign : BasicDesign
         (2, 3, 5),
         (3, 6, 5),
         (3, 4, 6)
-    };
+    ];
     
-    private static readonly Int3[] digitalSteerTriangles = new Int3[] { (0, 1, 2), (0, 2, 3) };
+    private static readonly Int3[] digitalSteerTriangles = [(0, 1, 2), (0, 2, 3)];
 
     private readonly Vec4[] padVertexColors;
     private readonly Vec4[] accelVertexColorsOn;
@@ -57,8 +57,8 @@ public class CompactDesign : BasicDesign
         var steerColor = Skin.SteerColor ?? config.ActiveColor;
         var inactiveColor = Skin.InactiveColor ?? config.InactiveColor;
 
-        padVertexColors = new[]
-        {
+        padVertexColors =
+        [
             steerColor,
             steerColor,
             steerColor,
@@ -67,47 +67,47 @@ public class CompactDesign : BasicDesign
             inactiveColor,
             inactiveColor,
             inactiveColor
-        };
+        ];
 
-        accelVertexColorsOn = new[]
-        {
+        accelVertexColorsOn =
+        [
             accelColor,
             accelColor,
             accelColor
-        };
+        ];
 
-        brakeVertexColorsOn = new[]
-        {
+        brakeVertexColorsOn =
+        [
             brakeColor,
             brakeColor,
             brakeColor
-        };
+        ];
 
-        steerVertexColorsOn = new[]
-        {
+        steerVertexColorsOn =
+        [
             steerColor,
             steerColor,
             steerColor,
             steerColor
-        };
+        ];
 
-        steerVertexColorsOff = new[]
-        {
+        steerVertexColorsOff =
+        [
             inactiveColor,
             inactiveColor,
             inactiveColor,
             inactiveColor
-        };
+        ];
 
-        gasVertexColorsOff = new[]
-        {
+        gasVertexColorsOff =
+        [
             inactiveColor,
             inactiveColor,
             inactiveColor
-        };
+        ];
 
-        accelRealVertexColors = new[]
-        {
+        accelRealVertexColors =
+        [
             inactiveColor,
             accelColor,
             inactiveColor,
@@ -115,10 +115,10 @@ public class CompactDesign : BasicDesign
             accelColor,
             inactiveColor,
             accelColor
-        };
+        ];
 
-        brakeRealVertexColors = new[]
-        {
+        brakeRealVertexColors =
+        [
             inactiveColor,
             brakeColor,
             inactiveColor,
@@ -126,7 +126,7 @@ public class CompactDesign : BasicDesign
             brakeColor,
             inactiveColor,
             brakeColor
-        };
+        ];
     }
 
     public override CGameCtnMediaBlockTriangles InitiateAnalogSteer(TimeInt32 time, float value)
@@ -168,8 +168,8 @@ public class CompactDesign : BasicDesign
         return new CGameCtnMediaBlockTriangles.Key(node)
         {
             Time = time.ToTimeSingle() + config.StartOffset,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstTopY, 0),
                 new Vec3(secondX, thirdY, 0),
                 new Vec3(firstX, firstBottomY, 0),
@@ -178,7 +178,7 @@ public class CompactDesign : BasicDesign
                 new Vec3(firstX, firstBottomY, 0),
                 new Vec3(thirdX, thirdY, 0),
                 new Vec3(fourthX, thirdY, 0),
-            }
+            ]
         };
     }
 
@@ -216,12 +216,12 @@ public class CompactDesign : BasicDesign
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstY, 0),
                 new Vec3(secondX, secondY, 0),
                 new Vec3(thirdX, secondY, 0)
-            }
+            ]
         };
     }
 
@@ -260,8 +260,8 @@ public class CompactDesign : BasicDesign
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, thirdY, 0),
                 new Vec3(firstX, thirdY, 0),
                 new Vec3(thirdX, firstY, 0),
@@ -269,7 +269,7 @@ public class CompactDesign : BasicDesign
                 new Vec3(thirdX, secondY, 0),
                 new Vec3(secondX, thirdY, 0),
                 new Vec3(secondX, thirdY, 0)
-            }
+            ]
         };
     }
 
@@ -308,8 +308,8 @@ public class CompactDesign : BasicDesign
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstY, 0),
                 new Vec3(firstX, firstY, 0),
                 new Vec3(thirdX, thirdY, 0),
@@ -317,7 +317,7 @@ public class CompactDesign : BasicDesign
                 new Vec3(thirdX, secondY, 0),
                 new Vec3(secondX, firstY, 0),
                 new Vec3(secondX, firstY, 0)
-            }
+            ]
         };
     }
 
@@ -355,12 +355,12 @@ public class CompactDesign : BasicDesign
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstY, 0),
                 new Vec3(secondX, secondY, 0),
                 new Vec3(thirdX, secondY, 0)
-            }
+            ]
         };
     }
 
@@ -399,13 +399,13 @@ public class CompactDesign : BasicDesign
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstY, 0),
                 new Vec3(secondX, secondY, 0),
                 new Vec3(thirdX, secondY, 0),
                 new Vec3(thirdX, firstY, 0)
-            }
+            ]
         };
     }
 }

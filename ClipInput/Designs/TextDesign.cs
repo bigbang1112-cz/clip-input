@@ -7,13 +7,8 @@ using TmEssentials;
 
 namespace ClipInput.Designs;
 
-public class TextDesign : Design<TextDesignSkin, CGameCtnMediaBlockText, CControlEffectSimi.Key, CGameCtnMediaBlockText, CControlEffectSimi.Key>
+public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCtnMediaBlockText, CControlEffectSimi.Key, CGameCtnMediaBlockText, CControlEffectSimi.Key>(config)
 {
-    public TextDesign(ClipInputConfig config) : base(config)
-    {
-
-    }
-
     private CGameCtnMediaBlockText CreateDigitalTextBlock(bool pressed, Vec4 activeColor)
     {
         var effect = CControlEffectSimi.Create()
@@ -360,7 +355,7 @@ public class TextDesign : Design<TextDesignSkin, CGameCtnMediaBlockText, CContro
         throw new NotImplementedException();
     }
 
-    private CGameCtnMediaBlock InitiateGenericKey(string text, TimeSingle time, bool pressed, Vec2 position, Vec2 scale)
+    private CGameCtnMediaBlockText InitiateGenericKey(string text, TimeSingle time, bool pressed, Vec2 position, Vec2 scale)
     {
         var effect = CControlEffectSimi.Create()
             .Centered()

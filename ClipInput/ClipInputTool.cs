@@ -3,7 +3,6 @@ using ClipInput.Skins;
 using GBX.NET.Engines.Game;
 using GBX.NET.Inputs;
 using GbxToolAPI;
-using System.Text.RegularExpressions;
 using TmEssentials;
 
 namespace ClipInput;
@@ -48,7 +47,7 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
             .OrderBy(x => x.Time)
             .ToList();
         
-        ghosts = new List<Ghost> { new(inputs) };
+        ghosts = [new(inputs)];
         endTime = inputs.LastOrDefault()?.Time ?? TimeInt32.Zero;
     }
 

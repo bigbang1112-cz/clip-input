@@ -10,24 +10,24 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
 {
     private readonly ClipInputConfig config;
     
-    private static readonly Int3[] keyTriangles = new[]
-    {
+    private static readonly Int3[] keyTriangles =
+    [
         new Int3(0, 1, 2),
         new Int3(1, 2, 3)
-    };
+    ];
 
-    private static readonly Int3[] gasTriangles = new[]
-    {
+    private static readonly Int3[] gasTriangles =
+    [
         new Int3(0, 1, 4),
         new Int3(1, 4, 5),
         new Int3(1, 2, 5),
         new Int3(2, 5, 6),
         new Int3(2, 3, 6),
         new Int3(3, 6, 7)
-    };
+    ];
 
-    private static readonly Int3[] padTriangles = new[]
-    {
+    private static readonly Int3[] padTriangles =
+    [
         new Int3(0, 1, 2),
         new Int3(1, 2, 3),
 
@@ -35,10 +35,10 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         new Int3(3, 4, 5),
 
         new Int3(4, 5, 6),
-    };
+    ];
 
-    private static readonly Int3[] mouseTriangles = new Int3[]
-    {
+    private static readonly Int3[] mouseTriangles =
+    [
         (0, 5, 7),
         (5, 6, 7),
         (0, 1, 7),
@@ -53,10 +53,10 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         (3, 16, 17),
         (18, 19, 20),
         (19, 20, 21)
-    };
+    ];
 
-    private static readonly Vec3[] mousePositions = new Vec3[]
-    {
+    private static readonly Vec3[] mousePositions =
+    [
         new Vec3(-0.18f, 0.4f, 0),
         new Vec3(-0.26f, 0.12f, 0),
         new Vec3(-0.26f, 0.104f, 0),
@@ -83,7 +83,7 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         new Vec3(0.026f, 0.12f, 0),
         new Vec3(-0.026f, 0.264f, 0),
         new Vec3(-0.026f, 0.12f, 0)
-    };
+    ];
 
     private readonly Vec4[] keyVertexColorsOff;
 
@@ -109,12 +109,12 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         var mouseRightClickColor = Skin.MouseRightClickColor ?? config.ActiveColor;
         var inactiveColor = Skin.InactiveColor ?? config.InactiveColor;
 
-        keyAccelVertexColorsOn = new[] { accelColor, accelColor, accelColor, accelColor };
-        keyBrakeVertexColorsOn = new[] { brakeColor, brakeColor, brakeColor, brakeColor };
-        keyVertexColorsOff = new[] { inactiveColor, inactiveColor, inactiveColor, inactiveColor };
+        keyAccelVertexColorsOn = [accelColor, accelColor, accelColor, accelColor];
+        keyBrakeVertexColorsOn = [brakeColor, brakeColor, brakeColor, brakeColor];
+        keyVertexColorsOff = [inactiveColor, inactiveColor, inactiveColor, inactiveColor];
 
-        accelerateRealVertexColors = new[]
-        {
+        accelerateRealVertexColors =
+        [
             inactiveColor,
             inactiveColor,
             accelColor,
@@ -123,10 +123,10 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
             inactiveColor,
             accelColor,
             accelColor
-        };
+        ];
 
-        brakeRealVertexColors = new[]
-        {
+        brakeRealVertexColors =
+        [
             brakeColor,
             brakeColor,
             inactiveColor,
@@ -135,10 +135,10 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
             brakeColor,
             inactiveColor,
             inactiveColor
-        };
+        ];
 
-        padVertexColors = new[]
-        {
+        padVertexColors =
+        [
             steerColor,
             steerColor,
             steerColor,
@@ -146,13 +146,13 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
             inactiveColor,
             inactiveColor,
             inactiveColor
-        };
+        ];
 
         mouseNoClickVertexColors = new Vec4[mousePositions.Length];
         Array.Fill(mouseNoClickVertexColors, config.InactiveColor);
 
-        mouseLeftClickVertexColors = new[]
-        {
+        mouseLeftClickVertexColors =
+        [
             inactiveColor,
             inactiveColor,
             inactiveColor,
@@ -175,10 +175,10 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
             inactiveColor,
             inactiveColor,
             inactiveColor
-        };
+        ];
 
-        mouseRightClickVertexColors = new[]
-        {
+        mouseRightClickVertexColors =
+        [
             mouseRightClickColor,
             mouseRightClickColor,
             inactiveColor,
@@ -201,10 +201,10 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
             inactiveColor,
             inactiveColor,
             inactiveColor
-        };
+        ];
 
-        mouseBothClickVertexColors = new[]
-        {
+        mouseBothClickVertexColors =
+        [
             mouseRightClickColor,
             mouseRightClickColor,
             inactiveColor,
@@ -227,7 +227,7 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
             inactiveColor,
             inactiveColor,
             inactiveColor
-        };
+        ];
     }
 
     public override CGameCtnMediaBlockTriangles InitiateDigitalSteer(TimeSingle time, bool pressed)
@@ -334,13 +334,13 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstY, 0),
                 new Vec3(firstX, secondY, 0),
                 new Vec3(secondX, firstY, 0),
                 new Vec3(secondX, secondY, 0)
-            }
+            ]
         };
     }
 
@@ -357,13 +357,13 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstY, 0),
                 new Vec3(firstX, secondY, 0),
                 new Vec3(secondX, firstY, 0),
                 new Vec3(secondX, secondY, 0)
-            }
+            ]
         };
     }
 
@@ -397,8 +397,8 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstY, 0),
                 new Vec3(firstX, secondY, 0),
                 new Vec3(firstX, secondY, 0),
@@ -407,7 +407,7 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
                 new Vec3(secondX, secondY, 0),
                 new Vec3(secondX, secondY, 0),
                 new Vec3(secondX, thirdY, 0)
-            }
+            ]
         };
     }
     
@@ -441,8 +441,8 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstY, 0),
                 new Vec3(firstX, secondY, 0),
                 new Vec3(firstX, secondY, 0),
@@ -451,7 +451,7 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
                 new Vec3(secondX, secondY, 0),
                 new Vec3(secondX, secondY, 0),
                 new Vec3(secondX, thirdY, 0)
-            }
+            ]
         };
     }
 
@@ -479,13 +479,13 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         return new CGameCtnMediaBlockTriangles.Key(block)
         {
             Time = time,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstY, 0),
                 new Vec3(firstX, secondY, 0),
                 new Vec3(secondX, firstY, 0),
                 new Vec3(secondX, secondY, 0)
-            }
+            ]
         };
     }
 
@@ -546,8 +546,8 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         return new CGameCtnMediaBlockTriangles.Key(node)
         {
             Time = time.ToTimeSingle() + config.StartOffset,
-            Positions = new[]
-            {
+            Positions =
+            [
                 new Vec3(firstX, firstTopY, 0),
                 new Vec3(firstX, firstBottomY, 0),
                 new Vec3(secondX, secondTopY, 0),
@@ -555,7 +555,7 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
                 new Vec3(secondX, secondTopY, 0),
                 new Vec3(secondX, secondBottomY, 0),
                 new Vec3(thirdX, thirdY, 0),
-            }
+            ]
         };
     }
 
@@ -582,8 +582,7 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
 
         var effect = CControlEffectSimi.Create()
             .Centered()
-            .WithKeys(new CControlEffectSimi.Key[]
-            {
+            .WithKeys([
                 new CControlEffectSimi.Key
                 {
                     Time = timeStart,
@@ -598,7 +597,7 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
                     Scale = config.ActionKeysScale * 2,
                     Position = pos
                 }
-            })
+            ])
             .ForTMUF()
             .Build();
 
@@ -660,7 +659,7 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         block.Keys.Add(GetMouseKeyframe(block, time, curPos, offset));
     }
 
-    private CGameCtnMediaBlock InitiateGenericKey(string text, TimeSingle time, bool pressed, Vec2 position, Vec2 scale)
+    private CGameCtnMediaBlockText InitiateGenericKey(string text, TimeSingle time, bool pressed, Vec2 position, Vec2 scale)
     {
         var effect = CControlEffectSimi.Create()
             .Centered()
