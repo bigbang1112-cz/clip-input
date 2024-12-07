@@ -164,6 +164,13 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
             inputs = inputs.Select(input => input.WithTime(input.Time - fakeIsRaceRunning.Time)).ToList();
         }
 
+        if (replay?.Game == "TmNations" && inputEndTime.HasValue)
+        {
+            var inputList = inputs.ToList();
+            inputList.Add(new FakeFinishLine(inputEndTime.Value, true));
+            inputs = inputList;
+        }
+
         var inputTrackBuilder = new InputTrackBuilder(Config, tracks, inputs, endTime, inputEndTime > TimeInt32.Zero ? inputEndTime.Value : null);
 
         for (var i = 0; i < 2; i++)
