@@ -5,7 +5,7 @@
 		<AssemblyTitle>Clip Input 2 CLI</AssemblyTitle>
 		<Authors>Petr 'BigBang1112' Pivoňka</Authors>
 		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
-		<Version>2.0.12</Version>
+		<Version>2.0.14</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
