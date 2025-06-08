@@ -60,7 +60,7 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
             "basic" => await AssetsManager<ClipInputTool>.GetFromYmlAsync<BasicDesignSkin>(Path.Combine("Skins", "Basic", usedSkinId + ".yml")),
             "compact" => await AssetsManager<ClipInputTool>.GetFromYmlAsync<BasicDesignSkin>(Path.Combine("Skins", "Basic", usedSkinId + ".yml")),
             "image" => await AssetsManager<ClipInputTool>.GetFromYmlAsync<ImageDesignSkin>(Path.Combine("Skins", "Image", usedSkinId + ".yml")),
-            "text" => null,
+            "text" => await AssetsManager<ClipInputTool>.GetFromYmlAsync<TextDesignSkin>(Path.Combine("Skins", "Basic", usedSkinId + ".yml")),
             _ => throw new NotImplementedException($"{Config.DesignId} is not a valid design ID to be used with skins.")
         };
     }

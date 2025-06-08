@@ -106,9 +106,9 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         var accelColor = Skin.AccelColor ?? config.ActiveColor;
         var brakeColor = Skin.BrakeColor ?? config.BrakeColor;
         var steerColor = Skin.SteerColor ?? config.ActiveColor;
+        var inactiveColor = Skin.InactiveColor ?? config.InactiveColor;
         var mouseLeftClickColor = Skin.MouseLeftClickColor ?? config.ActiveColor;
         var mouseRightClickColor = Skin.MouseRightClickColor ?? config.ActiveColor;
-        var inactiveColor = Skin.InactiveColor ?? config.InactiveColor;
 
         keyAccelVertexColorsOn = [accelColor, accelColor, accelColor, accelColor];
         keySteerVertexColorsOn = [steerColor, steerColor, steerColor, steerColor];
