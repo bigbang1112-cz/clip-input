@@ -3,6 +3,7 @@ using ClipInput.Skins;
 using GBX.NET.Engines.Game;
 using GBX.NET.Inputs;
 using GbxToolAPI;
+using System.Text.RegularExpressions;
 using TmEssentials;
 
 namespace ClipInput;
@@ -12,7 +13,7 @@ namespace ClipInput;
 [ToolGitHub("bigbang1112-cz/clip-input")]
 [ToolAssets("ClipInput2")]
 [ToolAssetsIgnoreIngame("Skins")]
-public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHasAssets, IConfigurable<ClipInputConfig>
+public partial class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHasAssets, IConfigurable<ClipInputConfig>
 {
     private readonly CGameCtnReplayRecord? replay;
     private readonly IReadOnlyCollection<Ghost> ghosts;
@@ -60,7 +61,7 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
             "basic" => await AssetsManager<ClipInputTool>.GetFromYmlAsync<BasicDesignSkin>(Path.Combine("Skins", "Basic", usedSkinId + ".yml")),
             "compact" => await AssetsManager<ClipInputTool>.GetFromYmlAsync<BasicDesignSkin>(Path.Combine("Skins", "Basic", usedSkinId + ".yml")),
             "image" => await AssetsManager<ClipInputTool>.GetFromYmlAsync<ImageDesignSkin>(Path.Combine("Skins", "Image", usedSkinId + ".yml")),
-            "text" => null,
+            "text" => await AssetsManager<ClipInputTool>.GetFromYmlAsync<TextDesignSkin>(Path.Combine("Skins", "Basic", usedSkinId + ".yml")),
             _ => throw new NotImplementedException($"{Config.DesignId} is not a valid design ID to be used with skins.")
         };
     }
@@ -140,8 +141,20 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
 
         var firstGhost = ghosts.FirstOrDefault()?.Object;
 
+        var raceTime = firstGhost?.RaceTime;
+
+        if (raceTime is null && replay?.XML is not null)
+        {
+            var match = GetTimeFromXml().Match(replay.XML);
+
+            if (match.Success && int.TryParse(match.Groups[1].Value, out var timeInt))
+            {
+                raceTime = new TimeInt32(timeInt);
+            }
+        }
+        
         var mapName = replay?.Challenge?.MapName ?? replay?.MapInfo?.Id ?? firstGhost?.Validate_ChallengeUid ?? "unknownmap";
-        var time = firstGhost?.RaceTime.ToTmString(useApostrophe: true) ?? "unfinished";
+        var time = raceTime?.ToTmString(useApostrophe: true) ?? "unfinished";
         var author = firstGhost?.GhostNickname ?? firstGhost?.GhostLogin ?? "unnamed";
 
         var pureFileName = $"ClipInput2_{TextFormatter.Deformat(mapName)}_{time}_{TextFormatter.Deformat(author)}.Clip.Gbx";
@@ -274,4 +287,7 @@ public class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaClip>>, IHa
         
         return ghost.RaceTime; // TMO samples should be fixed instead
     }
+
+    [GeneratedRegex(@"<times best=""([0-9]+)""")]
+    private static partial Regex GetTimeFromXml();
 }

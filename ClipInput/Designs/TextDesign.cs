@@ -2,13 +2,25 @@
 using GBX.NET;
 using GBX.NET.Engines.Control;
 using GBX.NET.Engines.Game;
-using GbxToolAPI;
 using TmEssentials;
 
 namespace ClipInput.Designs;
 
-public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCtnMediaBlockText, CControlEffectSimi.Key, CGameCtnMediaBlockText, CControlEffectSimi.Key>(config)
+public class TextDesign : Design<TextDesignSkin, CGameCtnMediaBlockText, CControlEffectSimi.Key, CGameCtnMediaBlockText, CControlEffectSimi.Key>
 {
+    private readonly Vec4 accelColor;
+    private readonly Vec4 brakeColor;
+    private readonly Vec4 steerColor;
+    private readonly Vec4 inactiveColor;
+
+    public TextDesign(ClipInputConfig config) : base(config)
+    {
+        accelColor = Skin.AccelColor ?? config.ActiveColor;
+        brakeColor = Skin.BrakeColor ?? config.BrakeColor;
+        steerColor = Skin.SteerColor ?? config.ActiveColor;
+        inactiveColor = Skin.InactiveColor ?? config.InactiveColor;
+    }
+
     private CGameCtnMediaBlockText CreateDigitalTextBlock(bool pressed, Vec4 activeColor)
     {
         var effect = CControlEffectSimi.Create()
@@ -18,7 +30,7 @@ public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCt
 
         var color = pressed
             ? new Vec3(activeColor.X, activeColor.Y, activeColor.Z)
-            : new Vec3(Config.InactiveColor.X, Config.InactiveColor.Y, Config.InactiveColor.Z);
+            : new Vec3(inactiveColor.X, inactiveColor.Y, inactiveColor.Z);
 
         return CGameCtnMediaBlockText.Create(effect)
             .WithColor(color)
@@ -29,7 +41,7 @@ public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCt
 
     public override CGameCtnMediaBlockText InitiateAnalogAccel(TimeSingle time, float value)
     {
-        var block = CreateDigitalTextBlock(pressed: true, Config.ActiveColor);
+        var block = CreateDigitalTextBlock(pressed: true, accelColor);
 
         var key = GetAnalogAccelKeyframe(block, time, value);
 
@@ -40,7 +52,7 @@ public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCt
 
     public override CGameCtnMediaBlockText InitiateAnalogBrake(TimeSingle time, float value)
     {
-        var block = CreateDigitalTextBlock(pressed: true, Config.ActiveColor);
+        var block = CreateDigitalTextBlock(pressed: true, brakeColor);
 
         var key = GetAnalogBrakeKeyframe(block, time, value);
 
@@ -56,7 +68,7 @@ public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCt
            .ForTMUF()
            .Build();
 
-        var color = new Vec3(Config.ActiveColor.X, Config.ActiveColor.Y, Config.ActiveColor.Z);
+        var color = new Vec3(steerColor.X, steerColor.Y, steerColor.Z);
 
         var block = CGameCtnMediaBlockText.Create(effect)
             .WithColor(color)
@@ -73,7 +85,7 @@ public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCt
 
     public override CGameCtnMediaBlockText InitiateDigitalAccel(TimeSingle time, bool pressed)
     {
-        var block = CreateDigitalTextBlock(pressed, Config.ActiveColor);
+        var block = CreateDigitalTextBlock(pressed, accelColor);
 
         var key = GetDigitalAccelKeyframe(block, time);
 
@@ -84,7 +96,7 @@ public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCt
 
     public override CGameCtnMediaBlockText InitiateDigitalBrake(TimeSingle time, bool pressed)
     {
-        var block = CreateDigitalTextBlock(pressed, Config.BrakeColor);
+        var block = CreateDigitalTextBlock(pressed, brakeColor);
 
         var key = GetDigitalBrakeKeyframe(block, time);
 
@@ -95,7 +107,7 @@ public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCt
 
     public override CGameCtnMediaBlockText InitiateDigitalSteer(TimeSingle time, bool pressed)
     {
-        var block = CreateDigitalTextBlock(pressed, Config.ActiveColor);
+        var block = CreateDigitalTextBlock(pressed, steerColor);
 
         var key = GetDigitalSteerKeyframe(block, time);
 
@@ -236,7 +248,7 @@ public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCt
            .ForTMUF()
            .Build();
 
-        var color = new Vec3(Config.InactiveColor.X, Config.InactiveColor.Y, Config.InactiveColor.Z);
+        var color = new Vec3(inactiveColor.X, inactiveColor.Y, inactiveColor.Z);
 
         var block = CGameCtnMediaBlockText.Create(effect)
             .WithColor(color)
@@ -279,7 +291,7 @@ public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCt
             .Build();
 
         return CGameCtnMediaBlockText.Create(effect)
-            .WithColor(new Vec3(Config.InactiveColor.X, Config.InactiveColor.Y, Config.InactiveColor.Z))
+            .WithColor(new Vec3(inactiveColor.X, inactiveColor.Y, inactiveColor.Z))
             .WithText("⏹")
             .ForTMUF()
             .Build();
@@ -364,7 +376,7 @@ public class TextDesign(ClipInputConfig config) : Design<TextDesignSkin, CGameCt
 
         var color = pressed
             ? new Vec3(Config.ActiveColor.X, Config.ActiveColor.Y, Config.ActiveColor.Z)
-            : new Vec3(Config.InactiveColor.X, Config.InactiveColor.Y, Config.InactiveColor.Z);
+            : new Vec3(inactiveColor.X, inactiveColor.Y, inactiveColor.Z);
 
         var block = CGameCtnMediaBlockText.Create(effect)
             .WithColor(color)

@@ -88,6 +88,7 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
     private readonly Vec4[] keyVertexColorsOff;
 
     private readonly Vec4[] keyAccelVertexColorsOn;
+    private readonly Vec4[] keySteerVertexColorsOn;
     private readonly Vec4[] keyBrakeVertexColorsOn;
     private readonly Vec4[] accelerateRealVertexColors;
     private readonly Vec4[] brakeRealVertexColors;
@@ -105,11 +106,12 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
         var accelColor = Skin.AccelColor ?? config.ActiveColor;
         var brakeColor = Skin.BrakeColor ?? config.BrakeColor;
         var steerColor = Skin.SteerColor ?? config.ActiveColor;
+        var inactiveColor = Skin.InactiveColor ?? config.InactiveColor;
         var mouseLeftClickColor = Skin.MouseLeftClickColor ?? config.ActiveColor;
         var mouseRightClickColor = Skin.MouseRightClickColor ?? config.ActiveColor;
-        var inactiveColor = Skin.InactiveColor ?? config.InactiveColor;
 
         keyAccelVertexColorsOn = [accelColor, accelColor, accelColor, accelColor];
+        keySteerVertexColorsOn = [steerColor, steerColor, steerColor, steerColor];
         keyBrakeVertexColorsOn = [brakeColor, brakeColor, brakeColor, brakeColor];
         keyVertexColorsOff = [inactiveColor, inactiveColor, inactiveColor, inactiveColor];
 
@@ -233,7 +235,7 @@ public class BasicDesign : Design<BasicDesignSkin, CGameCtnMediaBlockTriangles, 
     public override CGameCtnMediaBlockTriangles InitiateDigitalSteer(TimeSingle time, bool pressed)
     {
         // spawn keyboard left/right key
-        var block = CGameCtnMediaBlockTriangles2D.Create(pressed ? keyAccelVertexColorsOn : keyVertexColorsOff)
+        var block = CGameCtnMediaBlockTriangles2D.Create(pressed ? keySteerVertexColorsOn : keyVertexColorsOff)
             .WithTriangles(keyTriangles)
             .ForTMUF()
             .Build();

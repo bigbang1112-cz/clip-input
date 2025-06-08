@@ -19,6 +19,7 @@ jobs:
     
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_BODY: ${{ github.event.release.body }}
     
     steps:
       - uses: actions/checkout@v4
@@ -26,8 +27,12 @@ jobs:
           submodules: recursive
       
       - name: Set release information
-        run: gh release edit ${{ github.ref_name }} -n "$(echo -e '### *[Release is being automatically created, please wait...](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*\n\n${{ github.event.release.body }}')"
-    
+        run: |
+          FINAL_BODY="***[Release is being automatically created, please wait...](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})***
+          
+          $RELEASE_BODY"
+          gh release edit ${{ github.ref_name }} -n "$FINAL_BODY"
+        
   build:
     needs: prepare-description
     
@@ -91,13 +96,6 @@ jobs:
 
       - name: Upload ${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }} to this release
         run: gh release upload ${{ github.ref_name }} ${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }}
-        
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}-${{ matrix.os.runtime }}
-          path: ${{ env.PROJECT_NAME }}${{ env.ZIP_SUFFIX }}.hash.txt
-          if-no-files-found: error
   
   finalize-description:
     needs: build
@@ -107,22 +105,13 @@ jobs:
     
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_BODY: ${{ github.event.release.body }}
     
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Download a Build Artifact
-        uses: actions/download-artifact@v4
-        with:
-          pattern: ${{ env.ARTIFACT_NAME }}-*
-          merge-multiple: true
-      
-      - name: Read hash files
-        run: |
-          echo "HashLinuxX64=$(tr -d '\r' < ${{ env.PROJECT_NAME }}-linux-x64.${{ github.ref_name }}.zip.hash.txt)" >> $GITHUB_ENV
-          echo "HashWinX64=$(tr -d '\r' < ${{ env.PROJECT_NAME }}-win-x64.${{ github.ref_name }}.zip.hash.txt)" >> $GITHUB_ENV
-          echo "HashWinX86=$(tr -d '\r' < ${{ env.PROJECT_NAME }}-win-x86.${{ github.ref_name }}.zip.hash.txt)" >> $GITHUB_ENV
-      
+      - uses: actions/checkout@v4
       - name: Set release information
-        run: gh release edit ${{ github.ref_name }} -n "$(echo -e '${{ github.event.release.body }}\n\n**SHA256 win-x64** `${{ env.HashWinX64 }}`\n**SHA256 win-x86** `${{ env.HashWinX86 }}`\n**SHA256 linux-x64** `${{ env.HashLinuxX64 }}`\n\nAssets were automatically generated using the [publish workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).')"
-    
+        run: |
+          FINAL_BODY="$RELEASE_BODY
+          
+          Assets were automatically generated using the [publish workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})."
+          gh release edit ${{ github.ref_name }} -n "$FINAL_BODY"
