@@ -96,7 +96,7 @@ public partial class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaCli
                 // note
             }
 
-            var inputs = ghost.PlayerInputs?.FirstOrDefault()?.Inputs ?? ghost.Inputs ?? replay?.Inputs;
+            var inputs = ghost.PlayerInputs?.FirstOrDefault()?.Inputs ?? ghost.GetDisplayableInputs().ToList() ?? replay?.Inputs;
 
             if (inputs is null || inputs.Count == 0)
             {
@@ -180,7 +180,7 @@ public partial class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaCli
         if (replay?.Game == "TmNations" && inputEndTime.HasValue)
         {
             var inputList = inputs.ToList();
-            inputList.Add(new FakeFinishLine(inputEndTime.Value, true));
+            inputList.Add(new FakeFinishLine(inputEndTime.Value, Data: 1));
             inputs = inputList;
         }
 
