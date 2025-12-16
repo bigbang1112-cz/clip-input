@@ -96,7 +96,7 @@ public partial class ClipInputTool : ITool, IHasOutput<NodeFile<CGameCtnMediaCli
                 // note
             }
 
-            var inputs = ghost.PlayerInputs?.FirstOrDefault()?.Inputs ?? ghost.GetDisplayableInputs().ToList() ?? replay?.Inputs;
+            var inputs = ghost.PlayerInputs?.FirstOrDefault()?.Inputs ?? replay?.Inputs ?? ghost.GetDisplayableInputs().ToList();
 
             if (inputs is null || inputs.Count == 0)
             {
